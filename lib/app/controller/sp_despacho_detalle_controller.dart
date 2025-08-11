@@ -1055,7 +1055,7 @@ class SPDespachoDetalleController extends GetxController {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Pendientes: ${(producto.unidadesRuta ?? 0) - (producto.unidadesProcesadas ?? 0)} unidades',
+                              'Pendientes: ${producto.unidadesPendientes} unidades | ${producto.cajasPendientes.toStringAsFixed(1)} cajas',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,

@@ -349,6 +349,19 @@ class SPProductoDetalle {
     }
   }
 
+  int get unidadesPendientes {
+    final total = unidadesRuta ?? 0;
+    final procesadas = unidadesProcesadas ?? 0;
+    return (total - procesadas).clamp(0, total);
+  }
+
+  /// Cajas pendientes (igual que en consolidado)
+  double get cajasPendientes {
+    final total = cajasRuta ?? 0.0;
+    final procesadas = cajasProcesadas ?? 0.0;
+    return (total - procesadas).clamp(0.0, total);
+  }
+
   double get progreso {
     final total = unidadesRuta ?? 0;
     final procesadas = unidadesProcesadas ?? 0;
