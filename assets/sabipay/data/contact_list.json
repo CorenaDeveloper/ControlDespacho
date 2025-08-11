@@ -1,0 +1,29 @@
+{
+  "contact_list": [
+    {
+      "id": 1,
+      "name": "Miranda",
+      "icon": "https://i.ibb.co/gb2yWnd/Ellipse-1.png"
+    },
+    {
+      "id": 2,
+      "name": "Alex houten",
+      "icon": "https://i.ibb.co/M5sN9GX/Type-Default-Component-Avatar-2.png"
+    },
+    {
+      "id": 3,
+      "name": "Dibala",
+      "icon": "https://i.ibb.co/Kb9bGcz/Type-Default-Component-Avatar-4.png"
+    },
+    {
+      "id": 4,
+      "name": "Rosdia",
+      "icon": "https://i.ibb.co/NxHDc2T/Type-Default-Component-Avatar-5.png"
+    },
+    {
+      "id": 5,
+      "name": "John doe",
+      "icon": "https://i.ibb.co/qYL4fhy/Type-Default-Component-Avatar-3.png"
+    }
+  ]
+}

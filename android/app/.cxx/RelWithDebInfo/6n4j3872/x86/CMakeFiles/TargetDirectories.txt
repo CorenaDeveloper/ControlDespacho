@@ -1,0 +1,2 @@
+C:/Users/programador04/source/repos/PortalAppsCore/App Control Despacho/android/app/.cxx/RelWithDebInfo/6n4j3872/x86/CMakeFiles/edit_cache.dir
+C:/Users/programador04/source/repos/PortalAppsCore/App Control Despacho/android/app/.cxx/RelWithDebInfo/6n4j3872/x86/CMakeFiles/rebuild_cache.dir

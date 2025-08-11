@@ -1,0 +1,65 @@
+name: nb_utils
+description: Collection of Widgets and helpful Methods that every developer needs.
+version: 7.0.4
+#homepage: https://bhoominn.github.io
+repository: https://github.com/bhoominn/nb_utils
+issue_tracker: https://github.com/bhoominn/nb_utils/issues
+funding:
+  - https://www.github.com/sponsors/bhoominn
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  shared_preferences: ^2.3.1
+  fluttertoast: ^8.2.6
+  connectivity_plus: ^6.0.5
+  http: ^1.2.2
+
+dev_dependencies:
+  lints: ^4.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.nb.nb_utils
+        pluginClass: NbUtilsPlugin
+      ios:
+        pluginClass: NbUtilsPlugin
+      linux:
+        pluginClass: nb_utils_plugin
+      macos:
+        pluginClass: NbUtilsPlugin
+      windows:
+        pluginClass: NbUtilsPlugin
+
+  fonts:
+    - family: LineAwesomeIcons
+      fonts:
+        - asset: fonts/LineAwesome.ttf
+          weight: 400
+
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/lottie/
+
+topics:
+  - widgets
+  - extensions
+  - utils
+  - chatgpt
+  - sharedpreference

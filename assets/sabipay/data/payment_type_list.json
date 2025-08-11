@@ -1,0 +1,24 @@
+{
+  "payment_type_list": [
+    {
+      "id": 1,
+      "name": "Electricity",
+      "icon": "https://i.ibb.co/Srwh3Mx/zap.png"
+    },
+    {
+      "id": 2,
+      "name": "Internet",
+      "icon": "https://i.ibb.co/4Fc71hp/wifi.png"
+    },
+    {
+      "id": 3,
+      "name": "Voucher",
+      "icon": "https://i.ibb.co/3Y9YmFT/ticket.png"
+    },
+    {
+      "id": 4,
+      "name": "Merchant",
+      "icon": "https://i.ibb.co/YNmjZff/merchant.png"
+    }
+  ]
+}

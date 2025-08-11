@@ -1,0 +1,40 @@
+{
+  "bank_list": [
+    {
+      "id": 1,
+      "name": "BCA",
+      "icon": "https://i.ibb.co/X8MGNww/Bank-logo2.png",
+      "description": "ATM, Mobile Banking, Internet Banking"
+    },
+    {
+      "id": 2,
+      "name": "BRI",
+      "icon": "https://i.ibb.co/5rMC7qB/Bank-logo3.png",
+      "description": "ATM, Mobile Banking, Internet Banking"
+    },
+    {
+      "id": 3,
+      "name": "BNI",
+      "icon": "https://i.ibb.co/fN2k9KR/Bank-logo4.png",
+      "description": "ATM, Mobile Banking, Internet Banking"
+    },
+    {
+      "id": 4,
+      "name": "Citibank",
+      "icon": "https://i.ibb.co/0ct5P82/Bank-logo5.png",
+      "description": "ATM, Mobile Banking, Internet Banking"
+    },
+    {
+      "id": 5,
+      "name": "CIMB Bank",
+      "icon": "https://i.ibb.co/6HrNXwL/Bank-logo6.png",
+      "description": "ATM, Mobile Banking, Internet Banking"
+    },
+    {
+      "id": 6,
+      "name": "Jago",
+      "icon": "https://i.ibb.co/98tcdgQ/Bank-logo1.png",
+      "description": "ATM, Mobile Banking, Internet Banking"
+    }
+  ]
+}

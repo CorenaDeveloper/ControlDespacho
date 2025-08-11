@@ -1,0 +1,18 @@
+{
+  "card_list": [
+    {
+      "card_bg_image": "https://i.ibb.co/NCqF4k1/Blur1.png",
+      "card_holder_name": "LESLIE ALEXANDER",
+      "bank_name": "SABI BANK",
+      "is_wifi_available": true,
+      "card_number": "4032 8739 0081 6621"
+    },
+    {
+      "card_bg_image": "https://i.ibb.co/GChSf87/Blur.png",
+      "card_holder_name": "LESLIE ALEXANDER",
+      "bank_name": "SABI BANK",
+      "is_wifi_available": true,
+      "card_number": "4032 8739 0081 1111"
+    }
+  ]
+}

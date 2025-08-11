@@ -1,0 +1,50 @@
+{
+  "notification_list": [
+    {
+      "date_category": "Today",
+      "messages": [
+        {
+          "message": "Yeayy!! $450 top up has been added to your account",
+          "title": "Top up successfully",
+          "time": "12:23",
+          "image": "https://i.ibb.co/LS2P1KF/Icon.png"
+        },
+        {
+          "message": "Yeayy!! $450 top up has been added to your account",
+          "title": "Transfer successfully",
+          "time": "12:23",
+          "image": "https://i.ibb.co/YN14c6F/Icon-1.png"
+        },
+        {
+          "message": "Andre just added new expense to ”Billiard team” click here to pay the bill",
+          "title": "Andre added expense to ”Billiard team”",
+          "time": "12:23",
+          "image": "https://i.ibb.co/N6hKG9n/Icon-2.png"
+        }
+      ]
+    },
+    {
+      "date_category": "Yesterday",
+      "messages": [
+        {
+          "message": "Yeayy!! $450 top up has been added to your account",
+          "title": "Top up successfully",
+          "time": "14:23",
+          "image": "https://i.ibb.co/LS2P1KF/Icon.png"
+        },
+        {
+          "message": "Yeayy!! $450 top up has been added to your account",
+          "title": "Transfer successfully",
+          "time": "14:23",
+          "image": "https://i.ibb.co/YN14c6F/Icon-1.png"
+        },
+        {
+          "message": "Andre just added new expense to ”Billiard team” click here to pay the bill",
+          "title": "Andre added expense to ”Billiard team”",
+          "time": "13:23",
+          "image": "https://i.ibb.co/N6hKG9n/Icon-2.png"
+        }
+      ]
+    }
+  ]
+}

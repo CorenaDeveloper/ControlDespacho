@@ -1,0 +1,2 @@
+C:/Users/programador04/source/repos/PortalAppsCore/App Control Despacho/android/app/.cxx/RelWithDebInfo/6n4j3872/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/programador04/source/repos/PortalAppsCore/App Control Despacho/android/app/.cxx/RelWithDebInfo/6n4j3872/armeabi-v7a/CMakeFiles/rebuild_cache.dir
