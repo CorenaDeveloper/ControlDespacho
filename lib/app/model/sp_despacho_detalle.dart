@@ -385,19 +385,7 @@ class SPProductoDetalle {
   String get codigoSeguro => codigoBarra ?? 'Sin código';
   String get itemSeguro => itemId ?? 'Sin ID';
 
-  String get loteSeguro {
-    if (lote == null || lote!.isEmpty) return 'Sin lote';
-
-    // Dividir por comas, eliminar duplicados y espacios en blanco
-    final lotesUnicos = lote!
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toSet()
-        .toList();
-
-    return lotesUnicos.join(', ');
-  }
+  String get loteSeguro => lote ?? 'Sin lote';
 
   // Nueva propiedad para fechas de vencimiento únicas
   String get vencimientoSeguro {
@@ -407,60 +395,6 @@ class SPProductoDetalle {
     if (fechaVencimiento!.year == 1900) return 'Sin vencimiento';
 
     return _formatearFecha(fechaVencimiento!);
-  }
-
-  // Método para procesar vencimientos múltiples (si vienen como string)
-  String procesarVencimientoMultiple(String vencimientoString) {
-    if (vencimientoString.isEmpty) return 'Sin vencimiento';
-
-    // Si solo hay una fecha, devolverla formateada
-    if (!vencimientoString.contains(',')) {
-      final fecha = _parsearFecha(vencimientoString.trim());
-      return fecha != null ? _formatearFecha(fecha) : 'Fecha inválida';
-    }
-
-    // Si hay múltiples fechas separadas por comas
-    final fechasTexto = vencimientoString
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    // Parsear y filtrar fechas válidas
-    final fechasParsed = fechasTexto
-        .map((fechaTexto) => _parsearFecha(fechaTexto))
-        .where((fecha) => fecha != null)
-        .cast<DateTime>()
-        .toList();
-
-    if (fechasParsed.isEmpty) return 'Sin fechas válidas';
-
-    // Eliminar duplicados y ordenar
-    final fechasUnicas = fechasParsed.toSet().toList();
-    fechasUnicas.sort();
-
-    // Si todas las fechas son iguales, mostrar solo una
-    if (fechasUnicas.length == 1) {
-      return _formatearFecha(fechasUnicas.first);
-    }
-
-    // Si hay fechas diferentes, mostrar todas
-    return fechasUnicas.map((fecha) => _formatearFecha(fecha)).join(', ');
-  }
-
-  // Método auxiliar para parsear fechas de manera segura
-  DateTime? _parsearFecha(String fechaTexto) {
-    if (fechaTexto.isEmpty) return null;
-
-    // Filtrar fechas por defecto que no son válidas
-    if (fechaTexto.startsWith('1900-01-01')) return null;
-
-    try {
-      return DateTime.parse(fechaTexto);
-    } catch (e) {
-      print('❌ Error parseando fecha: $fechaTexto - $e');
-      return null;
-    }
   }
 
   // Método auxiliar para formatear fechas
