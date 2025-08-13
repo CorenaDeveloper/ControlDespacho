@@ -158,7 +158,7 @@ class ConsolidadoProductoDetalle {
       nombreProducto.isNotEmpty ? nombreProducto : 'Sin nombre';
   String get codigoSeguro => codigoBarra.isNotEmpty ? codigoBarra : itemId;
   String get itemSeguro => itemId.isNotEmpty ? itemId : 'Sin código';
-  String get loteSeguro => lote.isNotEmpty ? lote : 'Sin lote';
+  String get loteSeguro => lote.isNotEmpty ? lote : '0000';
 
   // Formateo de fecha
   String get fechaCreacionFormateada {
@@ -202,6 +202,26 @@ class ConsolidadoProductoDetalle {
       default:
         return estadoProducto;
     }
+  }
+
+  double get totalpendiente {
+    if (factor <= 0) return 0.0;
+    final pendientes = unidadesPendientes;
+    final cajasEnteras = (pendientes / factor).floor();
+    final unidadesSueltas = pendientes - (cajasEnteras * factor);
+    final unidadesFormateadas = unidadesSueltas / 1000.0;
+
+    return cajasEnteras + unidadesFormateadas;
+  }
+
+  double get totalGeneral {
+    if (factor <= 0) return 0.0;
+    final unidades = unidadesConsolidado;
+    final cajasEnteras = (unidades / factor).floor();
+    final unidadesSueltas = unidades - (cajasEnteras * factor);
+    final unidadesFormateadas = unidadesSueltas / 1000.0;
+
+    return cajasEnteras + unidadesFormateadas;
   }
 
   // Información de progreso

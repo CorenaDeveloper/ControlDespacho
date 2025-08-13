@@ -27,7 +27,7 @@ class SPDespachoDetalleController extends GetxController {
   final filteredProductos = <SPProductoDetalle>[].obs;
 
   // Filtros y búsqueda
-  final selectedFilterIndex = 0.obs;
+  final selectedFilterIndex = 1.obs;
   final searchQuery = ''.obs;
   final List<String> filterOptions = [
     'Todos',
@@ -1186,7 +1186,7 @@ class SPDespachoDetalleController extends GetxController {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6), // ✅ REDUCIDO de 8 a 6
+                        const SizedBox(width: 6), //  REDUCIDO de 8 a 6
 
                         // Pendientes (MÁS DESTACADO pero más compacto)
                         Expanded(

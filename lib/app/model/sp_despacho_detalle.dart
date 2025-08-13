@@ -405,7 +405,7 @@ class SPProductoDetalle {
   String get codigoSeguro => codigoBarra ?? 'Sin código';
   String get itemSeguro => itemId ?? 'Sin ID';
 
-  String get loteSeguro => lote ?? 'Sin lote';
+  String get loteSeguro => lote ?? '0000';
 
   // Nueva propiedad para fechas de vencimiento únicas
   String get vencimientoSeguro {
