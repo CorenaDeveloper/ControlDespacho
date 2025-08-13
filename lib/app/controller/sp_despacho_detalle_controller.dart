@@ -312,7 +312,7 @@ class SPDespachoDetalleController extends GetxController {
         },
         child: Container(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
           ),
           decoration: BoxDecoration(
             color: Get.isDarkMode ? spCardDark : Colors.white,
@@ -940,7 +940,7 @@ class SPDespachoDetalleController extends GetxController {
         },
         child: Container(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
           ),
           decoration: BoxDecoration(
             color: Get.isDarkMode ? spCardDark : Colors.white,
@@ -962,69 +962,108 @@ class SPDespachoDetalleController extends GetxController {
                     topRight: Radius.circular(16),
                   ),
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: getProductStatusColor(producto.estadoProducto),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color:
+                                getProductStatusColor(producto.estadoProducto),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
                             producto.nombreSeguro,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Item: ${producto.itemSeguro} • Lote: ${producto.loteSeguro}',
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color:
+                                getProductStatusColor(producto.estadoProducto)
+                                    .withAlpha(52),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${producto.unidadesProcesadas ?? 0}/${producto.unidadesRuta ?? 0}',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: Get.isDarkMode
-                                  ? spColorGrey400
-                                  : spColorGrey600,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: getProductStatusColor(
+                                  producto.estadoProducto),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: getProductStatusColor(producto.estadoProducto)
-                            .withAlpha(52),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${producto.unidadesProcesadas ?? 0}/${producto.unidadesRuta ?? 0}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: getProductStatusColor(producto.estadoProducto),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: cerrarModal,
+                          icon: const Icon(Icons.close, size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 24,
+                            minHeight: 24,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: cerrarModal,
-                      icon: const Icon(Icons.close, size: 20),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 24,
-                        minHeight: 24,
-                      ),
+
+                    // Item ID más visible
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: spColorPrimary.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: spColorPrimary.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            'Item: ${producto.itemSeguro}',
+                            style: TextStyle(
+                              color: spColorPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // Lote más visible
+                        if (producto.loteSeguro != 'Sin lote')
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: spColorTeal600.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                  color: spColorTeal600.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              'Lote: ${producto.loteSeguro}',
+                              style: TextStyle(
+                                color: spColorTeal600,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -1035,39 +1074,184 @@ class SPDespachoDetalleController extends GetxController {
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
-                    // Información de unidades disponibles
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: spColorTeal600.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: spColorTeal600.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: spColorTeal600,
+                    // Fecha de vencimiento (más compacta)
+                    if (producto.tieneVencimientoValido)
+                      Container(
+                        width: double.infinity,
+                        padding:
+                            const EdgeInsets.all(8), // ✅ REDUCIDO de 10 a 8
+                        margin: const EdgeInsets.only(
+                            bottom: 8), // ✅ REDUCIDO de 12 a 8
+                        decoration: BoxDecoration(
+                          color: producto.estaVencido
+                              ? spColorError500.withOpacity(0.1)
+                              : producto.tieneVencimientoProximo
+                                  ? spWarning500.withOpacity(0.1)
+                                  : spColorSuccess500.withOpacity(0.1),
+                          borderRadius:
+                              BorderRadius.circular(6), // ✅ REDUCIDO de 8 a 6
+                          border: Border.all(
+                            color: producto.estaVencido
+                                ? spColorError500.withOpacity(0.3)
+                                : producto.tieneVencimientoProximo
+                                    ? spWarning500.withOpacity(0.3)
+                                    : spColorSuccess500.withOpacity(0.3),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Pendientes: ${producto.unidadesPendientes} unidades | ${producto.cajasPendientes.toStringAsFixed(1)} cajas',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: spColorTeal600,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              producto.estaVencido
+                                  ? Icons.warning
+                                  : producto.tieneVencimientoProximo
+                                      ? Icons.schedule
+                                      : Icons.check_circle,
+                              color: producto.estaVencido
+                                  ? spColorError500
+                                  : producto.tieneVencimientoProximo
+                                      ? spWarning500
+                                      : spColorSuccess500,
+                              size: 16, // ✅ REDUCIDO de 18 a 16
+                            ),
+                            const SizedBox(width: 6), // ✅ REDUCIDO de 8 a 6
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Vencimiento', // ✅ TEXTO MÁS CORTO
+                                    style: TextStyle(
+                                      fontSize: 10, // ✅ REDUCIDO de 11 a 10
+                                      fontWeight: FontWeight.w500,
+                                      color: Get.isDarkMode
+                                          ? spColorGrey400
+                                          : spColorGrey600,
+                                    ),
+                                  ),
+                                  Text(
+                                    producto.vencimientoSeguro,
+                                    style: TextStyle(
+                                      fontSize: 12, // ✅ REDUCIDO de 14 a 12
+                                      fontWeight: FontWeight.w600,
+                                      color: producto.estaVencido
+                                          ? spColorError500
+                                          : producto.tieneVencimientoProximo
+                                              ? spWarning500
+                                              : spColorSuccess500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+
+                    // Información de totales y pendientes (más compacta)
+                    Row(
+                      children: [
+                        // Total (menos destacado)
+                        Expanded(
+                          child: Container(
+                            padding:
+                                const EdgeInsets.all(6), // ✅ REDUCIDO de 8 a 6
+                            decoration: BoxDecoration(
+                              color: spColorGrey500.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(
+                                  6), // ✅ REDUCIDO de 8 a 6
+                              border: Border.all(
+                                  color: spColorGrey500.withOpacity(0.2)),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Total',
+                                  style: TextStyle(
+                                    fontSize: 9, // ✅ REDUCIDO de 10 a 9
+                                    fontWeight: FontWeight.w500,
+                                    color: spColorGrey600,
+                                  ),
+                                ),
+                                const SizedBox(
+                                    height: 1), // ✅ REDUCIDO de 2 a 1
+                                Text(
+                                  '${producto.totalGeneral.toStringAsFixed(3)}',
+                                  style: TextStyle(
+                                    fontSize: 14, // ✅ REDUCIDO de 13 a 12
+                                    fontWeight: FontWeight.bold,
+                                    color: spColorGrey700,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6), // ✅ REDUCIDO de 8 a 6
+
+                        // Pendientes (MÁS DESTACADO pero más compacto)
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            padding:
+                                const EdgeInsets.all(8), // ✅ REDUCIDO de 12 a 8
+                            decoration: BoxDecoration(
+                              color: spWarning500.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(
+                                  6), // ✅ REDUCIDO de 8 a 6
+                              border: Border.all(
+                                  color: spWarning500.withOpacity(0.4),
+                                  width: 2),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.pending_actions,
+                                      size: 14, // ✅ REDUCIDO de 16 a 14
+                                      color: spWarning500,
+                                    ),
+                                    const SizedBox(
+                                        width: 3), // ✅ REDUCIDO de 4 a 3
+                                    Text(
+                                      'PENDIENTES',
+                                      style: TextStyle(
+                                        fontSize: 10, // ✅ REDUCIDO de 11 a 10
+                                        fontWeight: FontWeight.w700,
+                                        color: spWarning500,
+                                        letterSpacing:
+                                            0.3, // ✅ REDUCIDO de 0.5 a 0.3
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(
+                                    height: 2), // ✅ REDUCIDO de 4 a 2
+                                Text(
+                                  '${producto.totalpendiente.toStringAsFixed(3)}',
+                                  style: TextStyle(
+                                    fontSize: 16, // ✅ REDUCIDO de 18 a 16
+                                    fontWeight: FontWeight.w900,
+                                    color: spWarning500,
+                                  ),
+                                ),
+                                Text(
+                                  '${producto.unidadesPendientes} Unidades | ${producto.cajasPendientes.toStringAsFixed(0)} cajas',
+                                  style: TextStyle(
+                                    fontSize: 10, // ✅ REDUCIDO de 11 a 10
+                                    fontWeight: FontWeight.w600,
+                                    color: spWarning500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12), // ✅ REDUCIDO de 16 a 12
 
                     // Formulario de entrada
                     Row(
@@ -1283,12 +1467,23 @@ class SPDespachoDetalleController extends GetxController {
         return;
       }
 
-      String? codigoValido = (producto.codigoBarra ?? '').trim();
-      if (codigoValido.isEmpty) {
-        codigoValido = (producto.itemId ?? '').trim();
+      String? itemId = (producto.itemId ?? '').trim();
+      if (itemId.isEmpty) {
+        itemId = (producto.itemId ?? '').trim();
       }
 
-      if (codigoValido.isEmpty) {
+      if (itemId.isEmpty) {
+        _showErrorMessage(
+            'El producto no tiene un código válido para procesar');
+        return;
+      }
+
+      String? lote = (producto.lote ?? '').trim();
+      if (lote.isEmpty) {
+        lote = (producto.itemId ?? '').trim();
+      }
+
+      if (lote.isEmpty) {
         _showErrorMessage(
             'El producto no tiene un código válido para procesar');
         return;
@@ -1296,7 +1491,8 @@ class SPDespachoDetalleController extends GetxController {
       // Llamar a la API - ella se encarga de todas las validaciones
       final response = await _routeService.procesarEscaneoProducto(
         idSesion: despacho.value!.id!,
-        codigoBarra: codigoValido,
+        itemId: itemId,
+        lote: lote,
         cantidadCargada: cantidadTotal,
         observaciones: 'Procesado: $cajas cajas, $unidades unidades',
       );

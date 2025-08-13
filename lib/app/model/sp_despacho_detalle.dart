@@ -362,6 +362,26 @@ class SPProductoDetalle {
     return (total - procesadas).clamp(0.0, total);
   }
 
+  double get totalpendiente {
+    if (factor == null || factor! <= 0) return 0.0;
+    final pendientes = unidadesPendientes;
+    final cajasEnteras = (pendientes / factor!).floor();
+    final unidadesSueltas = pendientes - (cajasEnteras * factor!);
+    final unidadesFormateadas = unidadesSueltas / 1000.0;
+
+    return cajasEnteras + unidadesFormateadas;
+  }
+
+  double get totalGeneral {
+    if (factor == null || factor! <= 0) return 0.0;
+    final unidades = unidadesRuta ?? 0;
+    final cajasEnteras = (unidades / factor!).floor();
+    final unidadesSueltas = unidades - (cajasEnteras * factor!);
+    final unidadesFormateadas = unidadesSueltas / 1000.0;
+
+    return cajasEnteras + unidadesFormateadas;
+  }
+
   double get progreso {
     final total = unidadesRuta ?? 0;
     final procesadas = unidadesProcesadas ?? 0;

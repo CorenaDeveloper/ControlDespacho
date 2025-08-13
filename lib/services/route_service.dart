@@ -285,7 +285,8 @@ class RouteService extends GetxService {
   /// Procesar escaneo de producto
   Future<ApiResponse<Map<String, dynamic>>> procesarEscaneoProducto({
     required int idSesion,
-    required String codigoBarra,
+    required String itemId,
+    required String lote,
     required int cantidadCargada,
     String? observaciones,
   }) async {
@@ -294,7 +295,8 @@ class RouteService extends GetxService {
         'DS_PORTAL_DTRACK_Hoja_Despacho_SV/ProcesarEscaneoProducto',
         body: {
           'idSesion': idSesion,
-          'codigoBarra': codigoBarra,
+          'itemId': itemId,
+          'lote': lote,
           'cantidadCargada': cantidadCargada,
           if (observaciones != null && observaciones.isNotEmpty)
             'observaciones': observaciones,

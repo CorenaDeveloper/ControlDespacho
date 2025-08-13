@@ -855,7 +855,7 @@ class SPDespachoDetalleScreenState extends State<SPDespachoDetalleScreen> {
                         // El focus se manejará automáticamente por el observer
                       },
                       icon: const Icon(Icons.play_arrow, size: 16),
-                      label: const Text('Procesar Producto'),
+                      label: const Text('Trabajar Producto'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: spColorPrimary,
                         foregroundColor: Colors.white,
