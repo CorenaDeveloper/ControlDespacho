@@ -36,6 +36,25 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
 
   double horizontalPadding = 15.0;
 
+  Widget _buildUpdateSection() {
+    try {
+      // Verificar si el servicio está disponible
+      if (Get.isRegistered<AppUpdateService>()) {
+        final updateService = Get.find<AppUpdateService>();
+        return updateService.buildSettingsCard();
+      } else {
+        // Si no está registrado, intentar crearlo
+        Get.put(AppUpdateService());
+        final updateService = Get.find<AppUpdateService>();
+        return updateService.buildSettingsCard();
+      }
+    } catch (e) {
+      print('❌ Error con AppUpdateService: $e');
+      // Retornar widget vacío si hay error
+      return SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<SPSettingsController>(
@@ -47,7 +66,6 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
             appBar: spCommonAppBarWidget(context, titleText: settings),
             body: SafeArea(
               child: SingleChildScrollView(
-                // 🆕 CAMBIAR Column por SingleChildScrollView
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -62,8 +80,8 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 🆕 AGREGAR EL WIDGET DE ACTUALIZACIÓN AQUÍ (PRIMERA POSICIÓN):
-                      EasyUpdateService().buildSettingsCard(),
+                      // MODEL ACTUALIZACION
+                      _buildUpdateSection(),
 
                       // Separador
                       SizedBox(height: 20),
@@ -90,36 +108,7 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
                                 : spColorGrey500),
                       ),
                       15.height,
-                      _buildWalletPinWidget(),
-                      _buildBiometricWidget(),
-                      _buildPrivacyPolicyWidget(),
-                      15.height,
-                      GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return _showLogoutDialog();
-                            },
-                          );
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          height: 44,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              color: spColorError50,
-                              borderRadius: BorderRadius.circular(40)),
-                          child: Text(
-                            logout,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: spColorError500),
-                          ),
-                        ),
-                      ),
-                      // 🆕 AGREGAR PADDING BOTTOM PARA SCROLL:
-                      SizedBox(height: 20),
+                      // ... resto de tu código
                     ],
                   ),
                 ),

@@ -17,7 +17,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   Get.put(BarcodeScannerService(), permanent: true);
-  Get.put(EasyUpdateService());
+  Get.put(AppUpdateService());
+  ;
   // Registrar servicios en el orden correcto
   await Get.putAsync<ApiService>(() async => ApiService(), permanent: true);
   await Get.putAsync<AuthService>(() async => AuthService(), permanent: true);
