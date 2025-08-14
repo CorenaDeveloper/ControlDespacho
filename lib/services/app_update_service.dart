@@ -1,5 +1,5 @@
 // ===== lib/services/app_update_service.dart =====
-// VERSIÓN CORREGIDA CON install_plugin
+// VERSIÓN SIMPLE SIN DEPENDENCIAS PROBLEMÁTICAS
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -11,7 +11,6 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sabipay/constant/sp_colors.dart';
-import 'package:install_plugin/install_plugin.dart'; // ✅ NUEVA IMPORTACIÓN
 
 class AppUpdateService extends GetxService {
   static AppUpdateService get instance => Get.find<AppUpdateService>();
@@ -19,8 +18,8 @@ class AppUpdateService extends GetxService {
   // 🎯 CONFIGURACIÓN - SOLO CAMBIAR ESTOS VALORES:
   static const String NUEVA_VERSION = '1.4.2'; // ← CAMBIAR AQUÍ
   static const String GOOGLE_DRIVE_ID =
-      '1AGgB08i9Vz5URibFXEcZY0oxb7OUtP6D'; // ← TU ID
-  static const bool FORZAR_ACTUALIZACION = false; // ← true = obligatoria
+      '1mZOzulRiVT8qDOSYE-Nsgn2pvscjU9fL'; // ← TU ID
+  static const bool FORZAR_ACTUALIZACION = true; // ← true = obligatoria
 
   // 🔧 URL CONSTRUIDA AUTOMÁTICAMENTE
   static const String DRIVE_DOWNLOAD_URL =
@@ -155,7 +154,7 @@ class AppUpdateService extends GetxService {
             _buildOption(
               icon: Icons.download,
               title: 'Descarga Automática',
-              subtitle: 'Recomendado - Descarga e instala',
+              subtitle: 'Descarga y abre el instalador',
               color: Colors.green,
               isRecommended: true,
               onTap: () {
@@ -283,7 +282,7 @@ class AppUpdateService extends GetxService {
       print('❌ Error en descarga: $e');
       Get.back(); // Cerrar progreso
 
-      // Fallback automático
+      // Fallback automático a Drive
       Get.snackbar(
         '🔄 Alternativa',
         'Abriendo Google Drive...',
@@ -386,7 +385,7 @@ class AppUpdateService extends GetxService {
                   Icon(Icons.info, color: Colors.blue, size: 20),
                   SizedBox(width: 8),
                   Expanded(
-                      child: Text('Archivo en Descargas',
+                      child: Text('Archivo guardado en Descargas',
                           style: TextStyle(fontSize: 12))),
                 ],
               ),
@@ -402,7 +401,7 @@ class AppUpdateService extends GetxService {
               _installApk(filePath);
             },
             icon: Icon(Icons.install_mobile),
-            label: Text('Instalar Ahora'),
+            label: Text('Abrir Instalador'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
@@ -414,78 +413,84 @@ class AppUpdateService extends GetxService {
     );
   }
 
-  /// ===== INSTALACIÓN CON install_plugin =====
+  /// ===== INSTALACIÓN SIMPLE =====
 
-  /// FUNCIÓN PRINCIPAL DE INSTALACIÓN - CON install_plugin
+  /// FUNCIÓN PRINCIPAL DE INSTALACIÓN - SOLO URL LAUNCHER
   Future<void> _installApk(String filePath) async {
     try {
-      print('📱 Instalando: $filePath');
+      print('📱 Abriendo instalador: $filePath');
 
-      // Verificar archivo
+      // Verificar que el archivo existe
       final file = File(filePath);
       if (!await file.exists()) {
         _showError('Archivo no encontrado');
         return;
       }
 
-      // MÉTODO 1: Usar install_plugin (MÁS CONFIABLE)
-      await _installWithInstallPlugin(filePath);
+      // Usar url_launcher (método más compatible)
+      await _openWithUrlLauncher(filePath);
     } catch (e) {
-      print('❌ Error instalando: $e');
+      print('❌ Error abriendo instalador: $e');
+      _showManualInstallDialog(filePath);
+    }
+  }
 
-      // MÉTODO 2: Fallback con url_launcher
-      try {
-        await _installWithUrlLauncher(filePath);
-      } catch (e2) {
-        print('❌ Fallback falló: $e2');
-        _showManualInstallDialog(filePath);
+  /// Método principal: URL Launcher
+  Future<void> _openWithUrlLauncher(String filePath) async {
+    try {
+      // Intentar diferentes enfoques
+      final uri = Uri.file(filePath);
+
+      if (await canLaunchUrl(uri)) {
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (launched) {
+          Get.snackbar(
+            '📱 Instalador Abierto',
+            'Sigue las instrucciones para instalar',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            duration: Duration(seconds: 5),
+            icon: Icon(Icons.install_mobile, color: Colors.white),
+          );
+        } else {
+          throw Exception('No se pudo lanzar');
+        }
+      } else {
+        // Fallback: intentar con content URI
+        await _openWithContentUri(filePath);
       }
+    } catch (e) {
+      throw Exception('Error url_launcher: $e');
     }
   }
 
-  /// Método 1: install_plugin (PRINCIPAL)
-  Future<void> _installWithInstallPlugin(String filePath) async {
-    //CORRECTO (1 argumento solamente):
-    final result = await InstallPlugin.installApk(filePath);
+  /// Fallback: Intentar con content URI
+  Future<void> _openWithContentUri(String filePath) async {
+    try {
+      // Construir URI de contenido para Android
+      final fileName = filePath.split('/').last;
+      final contentUri = Uri.parse(
+          'content://com.android.externalstorage.documents/document/primary%3AAndroid%2Fdata%2F${fileName}');
 
-    if (result['isSuccess'] == true) {
-      Get.snackbar(
-        '📱 Instalación Iniciada',
-        'Sigue las instrucciones en pantalla',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: Duration(seconds: 5),
-        icon: Icon(Icons.install_mobile, color: Colors.white),
-      );
-    } else {
-      throw Exception('InstallPlugin falló: ${result['errorMessage']}');
-    }
-  }
+      if (await canLaunchUrl(contentUri)) {
+        await launchUrl(contentUri, mode: LaunchMode.externalApplication);
 
-  /// Método 2: URL Launcher (FALLBACK)
-  Future<void> _installWithUrlLauncher(String filePath) async {
-    final uri = Uri.file(filePath);
-
-    if (await canLaunchUrl(uri)) {
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-
-      if (launched) {
         Get.snackbar(
-          '📱 Instalador Abierto',
-          'Sigue las instrucciones en pantalla',
-          backgroundColor: Colors.green,
+          '📁 Archivo Abierto',
+          'Busca el archivo APK y tócalo para instalar',
+          backgroundColor: Colors.orange,
           colorText: Colors.white,
           duration: Duration(seconds: 5),
-          icon: Icon(Icons.install_mobile, color: Colors.white),
         );
       } else {
-        throw Exception('No se pudo lanzar el instalador');
+        throw Exception('No se puede abrir con content URI');
       }
-    } else {
-      throw Exception('No se puede abrir el archivo APK');
+    } catch (e) {
+      throw Exception('Error content URI: $e');
     }
   }
 
@@ -505,19 +510,30 @@ class AppUpdateService extends GetxService {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Instala manualmente siguiendo estos pasos:'),
+            Text('Para instalar la actualización:'),
             SizedBox(height: 12),
-            _buildStep(1, 'Ve a Descargas en tu teléfono'),
+            _buildStep(1, 'Ve a la carpeta Descargas'),
             _buildStep(2, 'Busca: SabiPay_v$NUEVA_VERSION.apk'),
-            _buildStep(3, 'Toca el archivo APK'),
-            _buildStep(4, 'Permite "Fuentes desconocidas" si aparece'),
-            _buildStep(5, 'Sigue las instrucciones de instalación'),
+            _buildStep(3, 'Toca el archivo para instalarlo'),
+            _buildStep(4, 'Permite "Fuentes desconocidas" si se solicita'),
+            SizedBox(height: 12),
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Ruta: $filePath',
+                style: TextStyle(fontSize: 10, fontFamily: 'monospace'),
+              ),
+            ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => _openDownloadsFolder(),
-            child: Text('Abrir Descargas'),
+            onPressed: () => _openFileManager(),
+            child: Text('Abrir Archivos'),
           ),
           ElevatedButton(
             onPressed: () => Get.back(),
@@ -579,7 +595,7 @@ class AppUpdateService extends GetxService {
     }
   }
 
-  /// ===== PERMISOS Y UTILIDADES =====
+  /// ===== UTILIDADES =====
 
   Future<bool> _requestPermissions() async {
     if (!Platform.isAndroid) return true;
@@ -649,7 +665,7 @@ class AppUpdateService extends GetxService {
               Get.back();
               openAppSettings();
             },
-            child: Text('Dar Permisos'),
+            child: Text('Configuración'),
           ),
         ],
       ),
@@ -660,24 +676,19 @@ class AppUpdateService extends GetxService {
     await openAppSettings();
   }
 
-  Future<void> _openDownloadsFolder() async {
+  Future<void> _openFileManager() async {
     try {
-      final downloadUri = Uri.parse(
+      // Intentar abrir gestor de archivos
+      final uri = Uri.parse(
           'content://com.android.externalstorage.documents/root/primary%3ADownload');
-      if (await canLaunchUrl(downloadUri)) {
-        await launchUrl(downloadUri);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
       } else {
-        final filesUri = Uri.parse(
-            'content://com.android.externalstorage.documents/root/primary');
-        if (await canLaunchUrl(filesUri)) {
-          await launchUrl(filesUri);
-        } else {
-          _showError('No se pudo abrir el gestor de archivos');
-        }
+        _showError('No se pudo abrir el gestor de archivos');
       }
     } catch (e) {
-      print('❌ Error abriendo descargas: $e');
-      _showError('No se pudo abrir la carpeta de descargas');
+      print('❌ Error gestor: $e');
+      _showError('No se pudo abrir el gestor de archivos');
     }
   }
 
@@ -802,7 +813,7 @@ class AppUpdateService extends GetxService {
     });
   }
 
-  /// Verificar manualmente (para botón de refresh)
+  /// Verificar manualmente
   Future<void> checkForUpdates() async {
     await _setupVersion();
 

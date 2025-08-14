@@ -57,7 +57,6 @@ dependencies:
   url_launcher: ^6.2.1         # Abrir enlaces  
   dio: ^5.3.2                  # Descargas
   permission_handler: ^11.0.1   # Permisos
-  install_plugin: ^2.1.0       # ✅ REEMPLAZA open_file_plus
 
 dev_dependencies:
   flutter_test:
