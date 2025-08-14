@@ -63,6 +63,56 @@ class SPConsolidadoDetalleController extends GetxController {
     }
   }
 
+  /// Método para ordenar productos con el criterio personalizado:
+  /// 1. Primero por el primer dígito del itemId (1, 2, 3, etc.)
+  /// 2. Segundo por cantidad de unidades descendente dentro de cada grupo
+  List<T> sortProductosPersonalizado<T>(
+    List<T> productos, {
+    required String Function(T) getItemId,
+    required int Function(T) getUnidades,
+  }) {
+    if (productos.isEmpty) return productos;
+
+    // Crear una copia para no modificar la lista original
+    final List<T> productosCopia = List.from(productos);
+
+    // Ordenar con criterio personalizado
+    productosCopia.sort((a, b) {
+      final itemIdA = getItemId(a);
+      final itemIdB = getItemId(b);
+      final unidadesA = getUnidades(a);
+      final unidadesB = getUnidades(b);
+
+      // Extraer primer dígito del itemId de forma segura
+      int getFirstDigit(String itemId) {
+        if (itemId.isEmpty) return 0;
+
+        // Buscar el primer dígito en la cadena
+        for (int i = 0; i < itemId.length; i++) {
+          final char = itemId[i];
+          if (char.contains(RegExp(r'[0-9]'))) {
+            return int.tryParse(char) ?? 0;
+          }
+        }
+        return 0; // Si no encuentra dígitos
+      }
+
+      final primerDigitoA = getFirstDigit(itemIdA);
+      final primerDigitoB = getFirstDigit(itemIdB);
+
+      // 1. Ordenar primero por primer dígito (ascendente)
+      final comparacionDigito = primerDigitoA.compareTo(primerDigitoB);
+      if (comparacionDigito != 0) {
+        return comparacionDigito;
+      }
+
+      // 2. Si tienen el mismo primer dígito, ordenar por unidades (descendente)
+      return unidadesB.compareTo(unidadesA); // Descendente: B compareTo A
+    });
+
+    return productosCopia;
+  }
+
   // 🆕 Configurar listener del scroll
   void _setupScrollListener() {
     scrollController.addListener(() {
@@ -121,7 +171,12 @@ class SPConsolidadoDetalleController extends GetxController {
         if (consolidadoDetalleResponse.success) {
           // Guardar todos los productos en cache
           allProductos.clear();
-          allProductos.addAll(consolidadoDetalleResponse.data);
+          final productosOrdenados = sortProductosPersonalizado(
+            consolidadoDetalleResponse.data,
+            getItemId: (producto) => producto.itemSeguro,
+            getUnidades: (producto) => producto.unidadesConsolidado,
+          );
+          allProductos.addAll(productosOrdenados);
 
           _updateStatistics();
           _applyPagination();
@@ -190,6 +245,11 @@ class SPConsolidadoDetalleController extends GetxController {
         break;
     }
 
+    filtered = sortProductosPersonalizado(
+      filtered,
+      getItemId: (producto) => producto.itemSeguro,
+      getUnidades: (producto) => producto.unidadesConsolidado,
+    );
     // Aplicar paginación
     final totalItems = filtered.length;
     final endIndex = currentPage.value * itemsPerPage;
@@ -266,6 +326,12 @@ class SPConsolidadoDetalleController extends GetxController {
       // Para búsquedas, mostrar todos los resultados sin paginación
       hasMoreData.value = false;
     }
+
+    filtered = sortProductosPersonalizado(
+      filtered,
+      getItemId: (producto) => producto.itemSeguro,
+      getUnidades: (producto) => producto.unidadesConsolidado,
+    );
 
     filteredProductos.value = filtered;
     update();

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:sabipay/app/controller/sp_settings_controller.dart';
+import 'package:sabipay/services/app_update_service.dart';
 import 'package:sabipay/constant/sp_colors.dart';
 import 'package:sabipay/constant/sp_images.dart';
 import 'package:sabipay/sabipy_theme/sp_wallet_theme.dart';
@@ -40,74 +41,87 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
     return GetBuilder<SPSettingsController>(
         init: controller,
         tag: 'sp_settings',
-        // theme: theme,
         builder: (controller) {
           return Scaffold(
             backgroundColor: Get.isDarkMode ? spDarkPrimary : spColorLightBg,
             appBar: spCommonAppBarWidget(context, titleText: settings),
             body: SafeArea(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Get.isDarkMode ? Colors.black : Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
+              child: SingleChildScrollView(
+                // 🆕 CAMBIAR Column por SingleChildScrollView
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Get.isDarkMode ? Colors.black : Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
                   ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      general,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color:
-                              Get.isDarkMode ? spColorGrey400 : spColorGrey500),
-                    ),
-                    15.height,
-                    _buildLanguageWidget(),
-                    _buildContactUsWidget(),
-                    15.height,
-                    Text(
-                      security,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color:
-                              Get.isDarkMode ? spColorGrey400 : spColorGrey500),
-                    ),
-                    15.height,
-                    _buildWalletPinWidget(),
-                    _buildBiometricWidget(),
-                    _buildPrivacyPolicyWidget(),
-                    15.height,
-                    GestureDetector(
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return _showLogoutDialog();
-                          },
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            color: spColorError50,
-                            borderRadius: BorderRadius.circular(40)),
-                        child: Text(
-                          logout,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: spColorError500),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 🆕 AGREGAR EL WIDGET DE ACTUALIZACIÓN AQUÍ (PRIMERA POSICIÓN):
+                      EasyUpdateService().buildSettingsCard(),
+
+                      // Separador
+                      SizedBox(height: 20),
+
+                      // El resto de tu código existente...
+                      Text(
+                        general,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: Get.isDarkMode
+                                ? spColorGrey400
+                                : spColorGrey500),
+                      ),
+                      15.height,
+                      _buildLanguageWidget(),
+                      _buildContactUsWidget(),
+                      15.height,
+                      Text(
+                        security,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: Get.isDarkMode
+                                ? spColorGrey400
+                                : spColorGrey500),
+                      ),
+                      15.height,
+                      _buildWalletPinWidget(),
+                      _buildBiometricWidget(),
+                      _buildPrivacyPolicyWidget(),
+                      15.height,
+                      GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return _showLogoutDialog();
+                            },
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              color: spColorError50,
+                              borderRadius: BorderRadius.circular(40)),
+                          child: Text(
+                            logout,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: spColorError500),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      // 🆕 AGREGAR PADDING BOTTOM PARA SCROLL:
+                      SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),

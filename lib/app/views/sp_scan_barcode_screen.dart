@@ -529,7 +529,7 @@ class SPScanBarcodeScreenState extends State<SPScanBarcodeScreen> {
                                   color: spColorTeal600, size: 18),
                               const SizedBox(height: 6),
                               Text(
-                                routeInfo.totalBoxes.toStringAsFixed(0),
+                                routeInfo.totalBoxes.toStringAsFixed(2),
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: themeController.isDarkMode

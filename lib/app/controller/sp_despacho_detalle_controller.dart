@@ -73,6 +73,56 @@ class SPDespachoDetalleController extends GetxController {
     }
   }
 
+  /// Método para ordenar productos con el criterio personalizado:
+  /// 1. Primero por el primer dígito del itemId (1, 2, 3, etc.)
+  /// 2. Segundo por cantidad de unidades descendente dentro de cada grupo
+  List<T> sortProductosPersonalizado<T>(
+    List<T> productos, {
+    required String Function(T) getItemId,
+    required int Function(T) getUnidades,
+  }) {
+    if (productos.isEmpty) return productos;
+
+    // Crear una copia para no modificar la lista original
+    final List<T> productosCopia = List.from(productos);
+
+    // Ordenar con criterio personalizado
+    productosCopia.sort((a, b) {
+      final itemIdA = getItemId(a);
+      final itemIdB = getItemId(b);
+      final unidadesA = getUnidades(a);
+      final unidadesB = getUnidades(b);
+
+      // Extraer primer dígito del itemId de forma segura
+      int getFirstDigit(String itemId) {
+        if (itemId.isEmpty) return 0;
+
+        // Buscar el primer dígito en la cadena
+        for (int i = 0; i < itemId.length; i++) {
+          final char = itemId[i];
+          if (char.contains(RegExp(r'[0-9]'))) {
+            return int.tryParse(char) ?? 0;
+          }
+        }
+        return 0; // Si no encuentra dígitos
+      }
+
+      final primerDigitoA = getFirstDigit(itemIdA);
+      final primerDigitoB = getFirstDigit(itemIdB);
+
+      // 1. Ordenar primero por primer dígito (ascendente)
+      final comparacionDigito = primerDigitoA.compareTo(primerDigitoB);
+      if (comparacionDigito != 0) {
+        return comparacionDigito;
+      }
+
+      // 2. Si tienen el mismo primer dígito, ordenar por unidades (descendente)
+      return unidadesB.compareTo(unidadesA); // Descendente: B compareTo A
+    });
+
+    return productosCopia;
+  }
+
   /// 🆕 Navegar a pantalla de finalizar despacho
   void navegarAFinalizarDespacho() {
     if (despacho.value == null) {
@@ -249,26 +299,23 @@ class SPDespachoDetalleController extends GetxController {
     // Marcar modal como abierto
     isModalOpen.value = true;
 
-    showModalBottomSheet(
+    showDialog(
       context: Get.context!,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
-      enableDrag: true,
+      barrierDismissible: true,
       builder: (context) =>
-          _buildFinalizeWithCommentModal(context, productosIncompletos),
+          _buildFinalizeWithCommentDialog(context, productosIncompletos),
     ).whenComplete(() {
       // Marcar modal como cerrado cuando se complete
       isModalOpen.value = false;
     });
   }
 
-  Widget _buildFinalizeWithCommentModal(
+  Widget _buildFinalizeWithCommentDialog(
       BuildContext context, List<SPProductoDetalle> productosIncompletos) {
     final TextEditingController comentarioController = TextEditingController();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-    // Función para finalizar (como procesarYCerrarModal)
+    // Función para finalizar
     void finalizarYCerrarModal() async {
       if (formKey.currentState!.validate()) {
         // Cerrar modal ANTES de finalizar
@@ -284,49 +331,39 @@ class SPDespachoDetalleController extends GetxController {
       }
     }
 
-    // Función para cerrar modal sin finalizar (como cerrarModal)
+    // Función para cerrar modal sin finalizar
     void cerrarModal() {
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       }
     }
 
-    return PopScope(
-      onPopInvokedWithResult: (didPop, result) async {
-        // Permitir cerrar con gesto o botón atrás
-        isModalOpen.value = false;
-      },
-      child: KeyboardListener(
-        focusNode: FocusNode()..requestFocus(),
-        onKeyEvent: (KeyEvent event) {
-          // Manejar Enter para finalizar
-          if (event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.enter) {
-            finalizarYCerrarModal();
-          }
-          // Manejar Escape para cerrar
-          else if (event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.escape) {
-            cerrarModal();
-          }
-        },
+    return Dialog(
+      // 🆕 Posicionar el dialog en la parte superior
+      alignment: Alignment.topCenter,
+      insetPadding: const EdgeInsets.only(
+        top: 0, // Margen desde arriba
+        left: 0,
+        right: 0,
+        bottom: 70, // Espacio para el teclado
+      ),
+      backgroundColor: Colors.transparent,
+      child: SingleChildScrollView(
         child: Container(
+          width: double.infinity,
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.9,
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
           decoration: BoxDecoration(
             color: Get.isDarkMode ? spCardDark : Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-            ),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Header compacto
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: spColorError500.withAlpha(26),
                   borderRadius: const BorderRadius.only(
@@ -343,13 +380,13 @@ class SPDespachoDetalleController extends GetxController {
                         'Finalizar Despacho',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontSize: 16,
                         ),
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: spColorError500.withAlpha(52),
                         borderRadius: BorderRadius.circular(8),
@@ -357,7 +394,7 @@ class SPDespachoDetalleController extends GetxController {
                       child: Text(
                         'Pendientes: ${productosIncompletos.length}',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: spColorError500,
                         ),
@@ -369,8 +406,8 @@ class SPDespachoDetalleController extends GetxController {
                       icon: const Icon(Icons.close, size: 20),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                        minWidth: 24,
-                        minHeight: 24,
+                        minWidth: 28,
+                        minHeight: 28,
                       ),
                     ),
                   ],
@@ -379,14 +416,15 @@ class SPDespachoDetalleController extends GetxController {
 
               // Contenido principal
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(16),
                 child: Form(
                   key: formKey,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Información de productos pendientes
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: spColorError500.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -398,15 +436,15 @@ class SPDespachoDetalleController extends GetxController {
                           children: [
                             Icon(
                               Icons.warning_amber_outlined,
-                              size: 16,
+                              size: 18,
                               color: spColorError500,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 'Comentario obligatorio para productos pendientes',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color: spColorError500,
                                 ),
@@ -416,60 +454,58 @@ class SPDespachoDetalleController extends GetxController {
                         ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
                       // Campo de comentario
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Material(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Get.isDarkMode
-                                      ? spColorGrey600
-                                      : spColorGrey300,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
+                      Material(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Get.isDarkMode
+                                  ? spColorGrey600
+                                  : spColorGrey300,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: TextFormField(
+                            controller: comentarioController,
+                            // 🆕 Permitir teclado normal
+                            keyboardType: TextInputType.multiline,
+                            maxLines: 4,
+                            minLines: 3,
+                            autofocus: true, // 🆕 Enfocar automáticamente
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                              hintText:
+                                  'Explica el motivo por el cual hay productos pendientes...',
+                              hintStyle: TextStyle(
+                                color: Get.isDarkMode
+                                    ? spColorGrey500
+                                    : spColorGrey400,
                               ),
-                              child: TextFormField(
-                                controller: comentarioController,
-                                keyboardType: TextInputType.none,
-                                maxLines: 3,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText:
-                                      'Explica el motivo por el cual hay productos pendientes...',
-                                  hintStyle: TextStyle(
-                                    color: Get.isDarkMode
-                                        ? spColorGrey500
-                                        : spColorGrey400,
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'El comentario es obligatorio';
-                                  }
-                                  if (value.trim().length < 10) {
-                                    return 'El comentario debe tener al menos 10 caracteres';
-                                  }
-                                  return null;
-                                },
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
                               ),
                             ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'El comentario es obligatorio';
+                              }
+                              if (value.trim().length < 10) {
+                                return 'El comentario debe tener al menos 10 caracteres';
+                              }
+                              return null;
+                            },
                           ),
-                        ],
+                        ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
                       // Botones de acción
                       Row(
@@ -480,7 +516,7 @@ class SPDespachoDetalleController extends GetxController {
                               onPressed: cerrarModal,
                               style: TextButton.styleFrom(
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                    const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   side: BorderSide(
@@ -494,6 +530,7 @@ class SPDespachoDetalleController extends GetxController {
                                 'Cancelar',
                                 style: TextStyle(
                                   fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                   color: Get.isDarkMode
                                       ? spColorGrey400
                                       : spColorGrey700,
@@ -502,7 +539,7 @@ class SPDespachoDetalleController extends GetxController {
                             ),
                           ),
 
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 12),
 
                           // Botón Finalizar
                           Expanded(
@@ -513,13 +550,13 @@ class SPDespachoDetalleController extends GetxController {
                                 backgroundColor: spColorError500,
                                 foregroundColor: Colors.white,
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               child: const Text(
-                                'Finalizar (ENT)',
+                                'Finalizar',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -689,7 +726,12 @@ class SPDespachoDetalleController extends GetxController {
             despacho.value = primeraSession;
 
             if (primeraSession.productos.isNotEmpty) {
-              productos.value = primeraSession.productos;
+              final productosOrdenados = sortProductosPersonalizado(
+                primeraSession.productos,
+                getItemId: (producto) => producto.itemSeguro,
+                getUnidades: (producto) => producto.unidadesRuta ?? 0,
+              );
+              productos.value = productosOrdenados;
               _updateStatistics();
               _applyFilters();
             } else {
@@ -771,6 +813,12 @@ class SPDespachoDetalleController extends GetxController {
             codigoBarra.contains(query);
       }).toList();
     }
+
+    filtered = sortProductosPersonalizado(
+      filtered,
+      getItemId: (producto) => producto.itemSeguro,
+      getUnidades: (producto) => producto.unidadesRuta ?? 0,
+    );
 
     filteredProductos.value = filtered;
     update(); // Forzar actualización de la UI

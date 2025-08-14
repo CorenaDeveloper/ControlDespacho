@@ -903,7 +903,7 @@ class SPConsolidadoDetalleScreenState
                         ),
                         4.height,
                         Text(
-                          '${producto.unidadesPreparadas}/${producto.cantidadEscaneos}',
+                          '${producto.unidadesPreparadas} Proc /${producto.cantidadEscaneos} Esc',
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),

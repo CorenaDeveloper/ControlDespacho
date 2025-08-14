@@ -25,8 +25,8 @@ class SPLoginController extends GetxController {
   void onInit() {
     super.onInit();
     // Valores por defecto para testing (opcional)
-    usernameController.text = '4259';
-    passwordController.text = 'Hola*2025';
+    usernameController.text = '';
+    passwordController.text = '';
   }
 
   /// Realizar login con API

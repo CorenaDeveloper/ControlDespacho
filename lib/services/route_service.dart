@@ -363,15 +363,21 @@ class RouteService extends GetxService {
 
       double totalKilogramos = 0;
       double totalToneladas = 0;
-      int totalUnidades = 0; // Cambiado de num a int
+      int totalUnidades = 0;
       double totalBoxes = 0;
 
       for (var item in dataList) {
-        // Conversiones más seguras
         totalKilogramos += _toDouble(item['kilogramos']);
         totalToneladas += _toDouble(item['toneladas']);
-        totalUnidades += _toInt(item['unidades']); // Usar función helper
-        totalBoxes += _toDouble(item['boX_ROUND']);
+        final unidades = _toInt(item['unidades']);
+        totalUnidades += unidades;
+        final factor = _toInt(item['factor']);
+        if (factor > 0) {
+          final cajasCalculadas = unidades / factor.toDouble();
+          totalBoxes += cajasCalculadas;
+        } else {
+          totalBoxes += _toDouble(item['boX_ROUND']);
+        }
       }
 
       return RouteInfo(
@@ -379,7 +385,7 @@ class RouteService extends GetxService {
         totalKilogramos: totalKilogramos,
         totalToneladas: totalToneladas,
         totalUnidades: totalUnidades,
-        totalBoxes: totalBoxes,
+        totalBoxes: totalBoxes, // Ahora incluye el cálculo correcto
         products: dataList.map((item) => ProductInfo.fromJson(item)).toList(),
       );
     } catch (e) {
@@ -462,6 +468,14 @@ class ProductInfo {
       required this.adtcodigobarra,
       required this.adtduN14});
 
+  // 🆕 NUEVA PROPIEDAD COMPUTADA: Calcular cajas reales usando factor
+  double get cajasCalculadas {
+    if (factor > 0) {
+      return unidades / factor.toDouble();
+    }
+    return box; // Fallback al valor original si no hay factor
+  }
+
   factory ProductInfo.fromJson(Map<String, dynamic> json) {
     DateTime? vencimiento;
     try {
@@ -500,7 +514,6 @@ class ProductInfo {
     if (value is String) {
       return double.tryParse(value) ?? 0.0;
     }
-    // Si es otro tipo, intentar convertir a string primero
     return double.tryParse(value.toString()) ?? 0.0;
   }
 
@@ -510,14 +523,12 @@ class ProductInfo {
     if (value is int) return value;
     if (value is double) return value.round();
     if (value is String) {
-      // Primero intentar como double, luego convertir a int
       final doubleValue = double.tryParse(value);
       if (doubleValue != null) {
         return doubleValue.round();
       }
       return int.tryParse(value) ?? 0;
     }
-    // Si es otro tipo, intentar convertir a string primero
     final doubleValue = double.tryParse(value.toString());
     if (doubleValue != null) {
       return doubleValue.round();

@@ -825,7 +825,7 @@ class SPDespachoDetalleScreenState extends State<SPDespachoDetalleScreen> {
                         ),
                         4.height,
                         Text(
-                          '${producto.unidadesProcesadas ?? 0}/${producto.unidadesRuta ?? 0}',
+                          '${producto.unidadesProcesadas ?? 0} Proc /${producto.unidadesRuta ?? 0} Tot',
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
