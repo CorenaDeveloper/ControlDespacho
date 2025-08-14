@@ -6,7 +6,6 @@ import 'package:sabipay/route/my_route.dart';
 import 'package:sabipay/sabipy_theme/sp_wallet_theme.dart';
 import 'package:sabipay/sabipy_theme/theme_controller.dart';
 import 'package:sabipay/services/api_service.dart';
-import 'package:sabipay/services/app_update_service.dart';
 import 'package:sabipay/services/auth_services.dart';
 import 'package:sabipay/services/route_service.dart';
 import 'package:sabipay/services/api_despacho.dart';
@@ -17,8 +16,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   Get.put(BarcodeScannerService(), permanent: true);
-  Get.put(AppUpdateService());
-  ;
+
   // Registrar servicios en el orden correcto
   await Get.putAsync<ApiService>(() async => ApiService(), permanent: true);
   await Get.putAsync<AuthService>(() async => AuthService(), permanent: true);

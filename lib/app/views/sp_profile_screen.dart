@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sabipay/app/controller/sp_profile_controller.dart';
 import 'package:sabipay/constant/sp_colors.dart';
 import 'package:sabipay/constant/sp_images.dart';
 import 'package:sabipay/sabipy_theme/sp_wallet_theme.dart';
 import 'package:sabipay/sabipy_theme/theme_controller.dart';
-import 'package:sabipay/widgets/sp_app_widget.dart';
 import 'package:sabipay/widgets/sp_common_button.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -27,6 +27,10 @@ class SPProfileScreenState extends State<SPProfileScreen> {
   final box = GetStorage();
   ThemeController themeController = Get.put(ThemeController());
 
+  // Url de repositorio
+  static const String REPOSITORY_URL =
+      'https://drive.google.com/drive/folders/1AGgB08i9Vz5URibFXEcZY0oxb7OUtP6D';
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +46,6 @@ class SPProfileScreenState extends State<SPProfileScreen> {
     return GetBuilder<SpProfileController>(
         init: controller,
         tag: 'sp_profile',
-        // theme: theme,
         builder: (controller) {
           return Scaffold(
             backgroundColor:
@@ -57,6 +60,7 @@ class SPProfileScreenState extends State<SPProfileScreen> {
                   children: [
                     _buildProfileWidget(),
                     20.height,
+                    _buildRepositoryWidget(),
                     _darkModeWidgets(),
                     20.height,
                     GestureDetector(
@@ -92,6 +96,90 @@ class SPProfileScreenState extends State<SPProfileScreen> {
         });
   }
 
+  // ✅ MÉTODO SIMPLE: SOLO COPIA LA URL
+  Future<void> _copyRepositoryUrl() async {
+    try {
+      await Clipboard.setData(ClipboardData(text: REPOSITORY_URL));
+
+      Get.snackbar(
+        '📋 URL Copiada',
+        'Pega la URL en tu navegador para acceder al repositorio',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: Duration(seconds: 4),
+        icon: Icon(Icons.copy, color: Colors.white),
+        messageText: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pega la URL en tu navegador para acceder al repositorio',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              REPOSITORY_URL,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
+        ),
+      );
+
+      print('✅ URL copiada al portapapeles: $REPOSITORY_URL');
+    } catch (e) {
+      print('❌ Error copiando URL: $e');
+      Get.snackbar(
+        '❌ Error',
+        'No se pudo copiar la URL',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: Duration(seconds: 3),
+      );
+    }
+  }
+
+  _buildRepositoryWidget() {
+    return ListTile(
+      onTap: _copyRepositoryUrl,
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 40,
+        height: 40,
+        padding: const EdgeInsets.all(10),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: spColorGrey100,
+        ),
+        child: Icon(
+          Icons.copy,
+          size: 20,
+          color: themeController.isDarkMode ? spColorPrimary : spTextColor,
+        ),
+      ),
+      title: Text(
+        'Copiar URL del Repositorio',
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w400,
+          color: themeController.isDarkMode ? Colors.white : spTextColor,
+        ),
+      ),
+      subtitle: Text(
+        'Toca para copiar y pegar en tu navegador',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: themeController.isDarkMode ? spColorGrey400 : spColorGrey500,
+        ),
+      ),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        size: 16,
+        color: themeController.isDarkMode ? Colors.white : spTextColor,
+      ),
+    );
+  }
+
   _showLogoutDialog() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -107,8 +195,6 @@ class SPProfileScreenState extends State<SPProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           5.height,
-
-          // Título del modal
           Text(
             'Cerrar Sesión',
             textAlign: TextAlign.center,
@@ -117,19 +203,13 @@ class SPProfileScreenState extends State<SPProfileScreen> {
               color: themeController.isDarkMode ? Colors.white : spTextColor,
             ),
           ),
-
           15.height,
-
-          // Divider
           Divider(
             color: spBorderColor.withOpacity(0.50),
             height: 1,
             thickness: 1,
           ),
-
           15.height,
-
-          // Icono de advertencia
           Center(
             child: Container(
               width: 60,
@@ -145,10 +225,7 @@ class SPProfileScreenState extends State<SPProfileScreen> {
               ),
             ),
           ),
-
           15.height,
-
-          // Mensaje de confirmación
           Text(
             '¿Está seguro que desea cerrar la sesión de su perfil?',
             textAlign: TextAlign.center,
@@ -157,10 +234,7 @@ class SPProfileScreenState extends State<SPProfileScreen> {
               color: themeController.isDarkMode ? Colors.white : spTextColor,
             ),
           ),
-
           10.height,
-
-          // Submensaje
           Text(
             'Deberá iniciar sesión nuevamente.',
             textAlign: TextAlign.center,
@@ -170,14 +244,10 @@ class SPProfileScreenState extends State<SPProfileScreen> {
                   themeController.isDarkMode ? spColorGrey400 : spColorGrey500,
             ),
           ),
-
           25.height,
-
-          // Botones de acción
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Botón Cancelar
               Expanded(
                 child: SPCommonButton(
                   onPressed: () {
@@ -194,17 +264,11 @@ class SPProfileScreenState extends State<SPProfileScreen> {
                       : spColorGrey700,
                 ),
               ),
-
               15.width,
-
-              // Botón Cerrar Sesión
               Expanded(
                 child: SPCommonButton(
                   onPressed: () async {
-                    // Cerrar el modal primero
                     Navigator.pop(context);
-
-                    // Ejecutar logout desde el controller
                     await controller.logout();
                   },
                   text: 'Cerrar Sesión',
@@ -215,8 +279,6 @@ class SPProfileScreenState extends State<SPProfileScreen> {
               ),
             ],
           ),
-
-          // Espaciado extra para iOS
           if (GetPlatform.isIOS) 20.height,
         ],
       ),
@@ -262,7 +324,7 @@ class SPProfileScreenState extends State<SPProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  controller.userName, // Usar getter del controller
+                  controller.userName,
                   style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: themeController.isDarkMode
@@ -271,7 +333,7 @@ class SPProfileScreenState extends State<SPProfileScreen> {
                 ),
                 2.height,
                 Text(
-                  controller.userCode, // Usar getter del controller
+                  controller.userCode,
                   style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w400,
                       color: themeController.isDarkMode
@@ -360,7 +422,6 @@ class SPProfileScreenState extends State<SPProfileScreen> {
       ),
       trailing: Transform.scale(
         scale: 0.9,
-        // Adjust the scale factor to change the size
         child: CupertinoSwitch(
           thumbColor: Colors.white,
           activeColor: spColorPrimary,
@@ -375,17 +436,15 @@ class SPProfileScreenState extends State<SPProfileScreen> {
     );
   }
 
-  // Reemplaza tu método _buildAppBar() actual con este:
   _buildAppBar() {
     return AppBar(
       backgroundColor:
           themeController.isDarkMode ? spDarkPrimary : spColorLightBg,
       elevation: 0,
-      leadingWidth: 70, // Dar espacio suficiente para el botón
+      leadingWidth: 70,
       centerTitle: false,
-
       title: Padding(
-        padding: const EdgeInsets.only(left: 10), // Ajustar si es necesario
+        padding: const EdgeInsets.only(left: 10),
         child: Text(
           'Regresar a Inicio',
           style: theme.textTheme.headlineSmall?.copyWith(
@@ -394,11 +453,9 @@ class SPProfileScreenState extends State<SPProfileScreen> {
           ),
         ),
       ),
-
       leading: Center(
         child: InkWell(
           onTap: () {
-            // Navegar al inicio en lugar de hacer pop
             Get.offNamedUntil(
                 MyRoute.spMainHomeScreen, (route) => route.isFirst);
           },
@@ -426,7 +483,6 @@ class SPProfileScreenState extends State<SPProfileScreen> {
           ),
         ),
       ),
-
       actions: [
         InkWell(
           onTap: () {

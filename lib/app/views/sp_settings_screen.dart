@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:sabipay/app/controller/sp_settings_controller.dart';
-import 'package:sabipay/services/app_update_service.dart';
 import 'package:sabipay/constant/sp_colors.dart';
 import 'package:sabipay/constant/sp_images.dart';
 import 'package:sabipay/sabipy_theme/sp_wallet_theme.dart';
@@ -10,6 +9,7 @@ import 'package:sabipay/sabipy_theme/theme_controller.dart';
 import 'package:sabipay/widgets/sp_app_widget.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:url_launcher/url_launcher.dart'; // ✅ AÑADIDO
 
 import '../../../../route/my_route.dart';
 import '../../constant/sp_strings.dart';
@@ -27,6 +27,10 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
   late ThemeData theme;
   ThemeController themeController = Get.put(ThemeController());
 
+  // URL del repositorio
+  static const String REPOSITORY_URL =
+      'https://drive.google.com/drive/folders/1AGgB08i9Vz5URibFXEcZY0oxb7OUtP6D';
+
   @override
   void initState() {
     super.initState();
@@ -36,23 +40,95 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
 
   double horizontalPadding = 15.0;
 
-  Widget _buildUpdateSection() {
+  // para abrir repositorio
+  Future<void> _openRepository() async {
     try {
-      // Verificar si el servicio está disponible
-      if (Get.isRegistered<AppUpdateService>()) {
-        final updateService = Get.find<AppUpdateService>();
-        return updateService.buildSettingsCard();
+      final url = Uri.parse(REPOSITORY_URL);
+
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+
+        Get.snackbar(
+          '🌐 Navegador Abierto',
+          'Se abrió el repositorio en tu navegador',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: Duration(seconds: 3),
+          icon: Icon(Icons.open_in_browser, color: Colors.white),
+        );
       } else {
-        // Si no está registrado, intentar crearlo
-        Get.put(AppUpdateService());
-        final updateService = Get.find<AppUpdateService>();
-        return updateService.buildSettingsCard();
+        throw Exception('No se puede abrir el enlace');
       }
     } catch (e) {
-      print('❌ Error con AppUpdateService: $e');
-      // Retornar widget vacío si hay error
-      return SizedBox.shrink();
+      print('❌ Error abriendo repositorio: $e');
+      Get.snackbar(
+        '❌ Error',
+        'No se pudo abrir el repositorio',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: Duration(seconds: 3),
+      );
     }
+  }
+
+  // ✅ AÑADIDO: Widget del repositorio
+  Widget _buildRepositoryCard() {
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.cloud_download,
+                    color: Colors.blue,
+                    size: 28,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Actualización Manual',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        'Descarga la última versión desde el repositorio',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _openRepository,
+              icon: Icon(Icons.open_in_browser, size: 18),
+              label: Text('Ir a Repositorio'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                minimumSize: Size(double.infinity, 48),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -60,12 +136,14 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
     return GetBuilder<SPSettingsController>(
         init: controller,
         tag: 'sp_settings',
+        // theme: theme,
         builder: (controller) {
           return Scaffold(
             backgroundColor: Get.isDarkMode ? spDarkPrimary : spColorLightBg,
             appBar: spCommonAppBarWidget(context, titleText: settings),
             body: SafeArea(
               child: SingleChildScrollView(
+                // ✅ AÑADIDO: SingleChildScrollView
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -80,13 +158,9 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // MODEL ACTUALIZACION
-                      _buildUpdateSection(),
+                      // ✅ AÑADIDO: Widget del repositorio al inicio
+                      _buildRepositoryCard(),
 
-                      // Separador
-                      SizedBox(height: 20),
-
-                      // El resto de tu código existente...
                       Text(
                         general,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -108,7 +182,34 @@ class SpSettingsScreenState extends State<SpSettingsScreen> {
                                 : spColorGrey500),
                       ),
                       15.height,
-                      // ... resto de tu código
+                      _buildWalletPinWidget(),
+                      _buildBiometricWidget(),
+                      _buildPrivacyPolicyWidget(),
+                      15.height,
+                      GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return _showLogoutDialog();
+                            },
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              color: spColorError50,
+                              borderRadius: BorderRadius.circular(40)),
+                          child: Text(
+                            logout,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: spColorError500),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

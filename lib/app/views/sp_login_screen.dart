@@ -7,7 +7,7 @@ import 'package:sabipay/widgets/sp_app_widget.dart';
 import 'package:sabipay/widgets/sp_common_button.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
-
+import 'package:package_info_plus/package_info_plus.dart';
 import '../controller/sp_login_controller.dart';
 
 class SPLoginScreen extends StatefulWidget {
@@ -21,11 +21,15 @@ class SPLoginScreenState extends State<SPLoginScreen> {
   SPLoginController controller = Get.put(SPLoginController());
   late ThemeData theme;
 
+  //Modificar siempre que se actualice la version al usuario
+  String appVersion = '1.0.2';
+
   @override
   void initState() {
     super.initState();
     theme =
         Get.isDarkMode ? SPWalletTheme.spDarkTheme : SPWalletTheme.spLightTheme;
+    _getAppVersion();
   }
 
   @override
@@ -244,9 +248,19 @@ class SPLoginScreenState extends State<SPLoginScreen> {
                                 : 'Iniciar Sesión',
                           )),
 
-                      10.height,
+                      30.height,
 
-                      // Enlace para olvido de contraseña (opcional)
+                      Center(
+                        child: Text(
+                          'Versión $appVersion',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Get.isDarkMode
+                                ? spColorGrey400
+                                : spColorGrey500,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
                       Center(
                         child: GestureDetector(
                           onTap: () {
@@ -273,6 +287,19 @@ class SPLoginScreenState extends State<SPLoginScreen> {
             ),
           );
         });
+  }
+
+  Future<void> _getAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      setState(() {
+        appVersion = info.version;
+      });
+    } catch (e) {
+      setState(() {
+        appVersion = '1.0.Dev';
+      });
+    }
   }
 
   void _showForgotPasswordDialog() {

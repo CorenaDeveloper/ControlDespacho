@@ -37,15 +37,63 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
-    <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
-         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
-
-         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    
+    <!-- ✅ QUERIES MEJORADAS PARA URL_LAUNCHER Y NAVEGADORES -->
     <queries>
+        <!-- Query original para texto (no tocar) -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        
+        <!-- ✅ NUEVAS QUERIES PARA ABRIR URLs EXTERNAS -->
+        
+        <!-- Query para Chrome específicamente -->
+        <package android:name="com.android.chrome" />
+        
+        <!-- Query para Firefox -->
+        <package android:name="org.mozilla.firefox" />
+        
+        <!-- Query para Edge -->
+        <package android:name="com.microsoft.emmx" />
+        
+        <!-- Query para Samsung Internet -->
+        <package android:name="com.sec.android.app.sbrowser" />
+        
+        <!-- Query para Google Drive -->
+        <package android:name="com.google.android.apps.docs" />
+        
+        <!-- Query para navegadores que manejan HTTP -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+        
+        <!-- Query para navegadores que manejan HTTPS -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        
+        <!-- Query específico para Google Drive URLs -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" android:host="drive.google.com" />
+        </intent>
+        
+        <!-- Query para actividades navegables en general -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+        </intent>
+        
+        <!-- Query para actividades que pueden manejar enlaces web -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
         </intent>
     </queries>
 </manifest>

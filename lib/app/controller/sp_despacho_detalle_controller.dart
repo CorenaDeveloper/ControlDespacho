@@ -345,7 +345,7 @@ class SPDespachoDetalleController extends GetxController {
         top: 0, // Margen desde arriba
         left: 0,
         right: 0,
-        bottom: 70, // Espacio para el teclado
+        bottom: 30, // Espacio para el teclado
       ),
       backgroundColor: Colors.transparent,
       child: SingleChildScrollView(
