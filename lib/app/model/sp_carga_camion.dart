@@ -1,5 +1,3 @@
-// lib/app/model/sp_carga_camion.dart
-
 class CargaCamion {
   final int? id;
   final String? idRuta;

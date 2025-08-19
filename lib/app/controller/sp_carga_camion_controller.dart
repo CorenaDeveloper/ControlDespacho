@@ -112,7 +112,7 @@ class SPCargaCamionController extends GetxController {
 
     Get.toNamed(
       MyRoute.spCargaCamionDetalleScreen,
-      arguments: carga.id,
+      arguments: carga.idRuta,
     );
   }
 
