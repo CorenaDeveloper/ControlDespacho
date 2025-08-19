@@ -12,7 +12,7 @@ import 'package:sabipay/constant/sp_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:sabipay/services/api_despacho.dart';
 
-class SPCargaCamionDetalleScreen extends GetxController {
+class SPCargaCamionDetalleController extends GetxController {
   final RouteService _routeService = RouteService.instance;
   final DespachoService _despachoService = DespachoService.instance;
   // Parámetros básicos

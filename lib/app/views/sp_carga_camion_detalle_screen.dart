@@ -10,17 +10,15 @@ import 'package:sabipay/sabipy_theme/sp_wallet_theme.dart';
 import 'package:sabipay/sabipy_theme/theme_controller.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-class SPCargaCamionDetalleScreenState extends StatefulWidget {
-  const SPCargaCamionDetalleScreenState({super.key});
+class SPCargaCamionDetalleScreen extends StatefulWidget {
+  const SPCargaCamionDetalleScreen({super.key});
 
   @override
-  SPCargaCamionDetalleScreenStateState createState() =>
-      SPCargaCamionDetalleScreenStateState();
+  SPDespachoDetalleScreenState createState() => SPDespachoDetalleScreenState();
 }
 
-class SPCargaCamionDetalleScreenStateState
-    extends State<SPCargaCamionDetalleScreenState> {
-  late SPCargaCamionDetalleScreen controller;
+class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
+  late SPCargaCamionDetalleController controller;
   final ThemeController themeController = Get.put(ThemeController());
 
   // 🔍 Controlador principal del buscador externo
@@ -37,7 +35,7 @@ class SPCargaCamionDetalleScreenStateState
     theme = themeController.isDarkMode
         ? SPWalletTheme.spDarkTheme
         : SPWalletTheme.spLightTheme;
-    controller = Get.put(SPCargaCamionDetalleScreen());
+    controller = Get.put(SPCargaCamionDetalleController());
 
     // 🎯 Auto-focus inicial y mantener el focus
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -116,7 +114,7 @@ class SPCargaCamionDetalleScreenStateState
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<SPCargaCamionDetalleScreen>(
+    return GetBuilder<SPCargaCamionDetalleController>(
       init: controller,
       builder: (controller) {
         return Scaffold(
@@ -275,7 +273,7 @@ class SPCargaCamionDetalleScreenStateState
           ),
         ],
       ),
-      child: GetBuilder<SPCargaCamionDetalleScreen>(
+      child: GetBuilder<SPCargaCamionDetalleController>(
         builder: (controller) {
           return Column(
             children: [
@@ -539,7 +537,7 @@ class SPCargaCamionDetalleScreenStateState
       ),
       child: SizedBox(
         height: 32,
-        child: GetBuilder<SPCargaCamionDetalleScreen>(
+        child: GetBuilder<SPCargaCamionDetalleController>(
           builder: (controller) {
             return ListView(
               scrollDirection: Axis.horizontal,
@@ -678,7 +676,7 @@ class SPCargaCamionDetalleScreenStateState
           }
         },
         color: spColorPrimary,
-        child: GetBuilder<SPCargaCamionDetalleScreen>(
+        child: GetBuilder<SPCargaCamionDetalleController>(
           builder: (controller) {
             if (controller.isLoading.value) {
               return const Center(
