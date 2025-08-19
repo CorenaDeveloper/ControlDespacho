@@ -141,6 +141,35 @@ class RouteService extends GetxService {
     }
   }
 
+  //================================================================
+  //OBTENER LOS DESPACHOS FINALIZADOS PARA CARGA DE CAMIONES PENDIENTES
+  //================================================================
+  Future<ApiResponse<Map<String, dynamic>>> getCargaCamionPendiente() async {
+    try {
+      final endpoint =
+          'DS_PORTAL_DTRACK_Hoja_Despacho_SV/Carga_Camion_Pendiente';
+
+      final response = await _apiService.get<Map<String, dynamic>>(
+        endpoint,
+        useAuthHeaders: true,
+      );
+
+      if (response.isSuccess) {
+        return response;
+      } else {
+        print('❌ Error al obtener Carga de camiones: ${response.message}');
+        return response;
+      }
+    } catch (e) {
+      print('❌ Error inesperado al obtener consolidados: $e');
+      return ApiResponse.error(
+        message: 'Error inesperado al obtener consolidados: $e',
+        details: 'Error',
+        statusCode: -1,
+      );
+    }
+  }
+
   Future<ApiResponse<Map<String, dynamic>>> getConsolidadoDetalle({
     required int idConsolidado,
   }) async {

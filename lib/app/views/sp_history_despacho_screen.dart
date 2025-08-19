@@ -70,7 +70,7 @@ class SPHistoryScreenState extends State<SPHistoryScreen> {
       title: Padding(
         padding: const EdgeInsets.only(left: 10),
         child: Text(
-          'Historial de Despachos',
+          'Historico',
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: themeController.isDarkMode ? Colors.white : spTextColor,

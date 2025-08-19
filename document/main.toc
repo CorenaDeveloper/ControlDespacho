@@ -1,0 +1,28 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {chapter}{\numberline {1}Introducción}{2}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Propósito del Documento}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Alcance}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Audiencia}{2}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Pantalla Principal}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Descripción General}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Imagen de la Pantalla}{3}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Características Principales}{4}{section.2.3}%
+\contentsline {chapter}{\numberline {3}Gestión de Rutas y Consolidado}{5}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Ruta}{5}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Descripción}{5}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Imagen de la Pantalla}{5}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Funcionalidades}{6}{subsection.3.1.3}%
+\contentsline {subsection}{\numberline {3.1.4}Detalle ruta escaneada}{7}{subsection.3.1.4}%
+\contentsline {subsection}{\numberline {3.1.5}Botón Trabajar Producto}{8}{subsection.3.1.5}%
+\contentsline {section}{\numberline {3.2}Pantalla Historial despacho}{9}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Pantallas Consolidado}{10}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Imagen de la Pantalla}{10}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Descripción}{11}{subsection.3.3.2}%
+\contentsline {chapter}{\numberline {4}Configuración y Perfil}{12}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Pantalla de Perfil}{12}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Descripción}{12}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Imagen de la Pantalla}{12}{subsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.1.3}Funcionalidades}{13}{subsection.4.1.3}%
+\contentsline {chapter}{\numberline {5}Flujos de Trabajo}{14}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Proceso de Despacho Completo}{14}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Navegación entre Pantallas}{14}{section.5.2}%

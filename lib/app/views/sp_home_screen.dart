@@ -92,15 +92,23 @@ class SPHomeScreenState extends State<SPHomeScreen>
   void _executeAction(int actionNumber) {
     switch (actionNumber) {
       case 1:
+        // Escaner
         Get.toNamed(MyRoute.spScanBarcodeScreen);
         break;
       case 2:
-        Get.toNamed(MyRoute.spPHistoryScreen);
-        break;
-      case 3:
+        //Consolidado
         Get.toNamed(MyRoute.spConsolidadoScreen);
         break;
+      case 3:
+        // Preparacionde ruta
+        Get.toNamed(MyRoute.spPHistoryScreen);
+        break;
       case 4:
+        // Carga de Camion
+        Get.toNamed(MyRoute.spCargaCamionScrenn);
+        break;
+      case 5:
+        // Configuración
         Get.toNamed(MyRoute.sPProfileScreen);
         break;
     }
@@ -258,34 +266,44 @@ class SPHomeScreenState extends State<SPHomeScreen>
               onTap: () => _executeAction(1),
             ),
             8.height,
-            // F2: Historial
+            // F2: Consolidados
             _buildMainActionCard(
-              icon: Icons.history,
-              title: 'Historial',
+              icon: Icons.inventory_2,
+              title: 'Consolidados',
               keyLabel: 'F2',
-              color: spColorTeal600,
+              color: spColorViolet700,
               isPressed: _pressedKey == 2,
               onTap: () => _executeAction(2),
             ),
             8.height,
-            // F3: Consolidados
+            // F3: Preparacion Ruta
             _buildMainActionCard(
-              icon: Icons.inventory_2,
-              title: 'Consolidados',
+              icon: Icons.history,
+              title: 'Preparación Ruta',
               keyLabel: 'F3',
-              color: spColorViolet700,
+              color: spColorTeal600,
               isPressed: _pressedKey == 3,
               onTap: () => _executeAction(3),
             ),
             8.height,
-            // F4: Configuración
+            // F4: Preparacion Ruta
+            _buildMainActionCard(
+              icon: Icons.fire_truck,
+              title: 'Carga de Camión',
+              keyLabel: 'F4',
+              color: spColorError500,
+              isPressed: _pressedKey == 4,
+              onTap: () => _executeAction(4),
+            ),
+            8.height,
+            // F5: Configuración
             _buildMainActionCard(
               icon: Icons.settings,
               title: 'Configuración',
-              keyLabel: 'F4',
+              keyLabel: 'F5',
               color: spColorGrey600,
-              isPressed: _pressedKey == 4,
-              onTap: () => _executeAction(4),
+              isPressed: _pressedKey == 5,
+              onTap: () => _executeAction(5),
             ),
           ],
         ),

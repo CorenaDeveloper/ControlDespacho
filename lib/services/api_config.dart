@@ -1,6 +1,6 @@
 class ApiConfig {
   // Flag para alternar entre desarrollo y producción
-  static const bool _isDevelopment = false; // Cambiar a false para producción
+  static const bool _isDevelopment = true; // Cambiar a false para producción
 
   // URLs base
   static const String _devBaseUrl =

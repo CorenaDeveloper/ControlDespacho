@@ -23,6 +23,7 @@ import 'package:sabipay/app/views/sp_despacho_detalle_screen.dart';
 import 'package:sabipay/app/views/sp_profile_screen.dart';
 import 'package:sabipay/app/views/sp_consolidados_screen.dart';
 import 'package:sabipay/app/views/sp_consolidado_detalle_screen.dart';
+import 'package:sabipay/app/views/sp_carga_camion_screen.dart';
 
 class MyRoute {
   /*------------------------------ EZWallet App -------------------------------------------*/
@@ -52,12 +53,14 @@ class MyRoute {
   static const sPProfileScreen = '/sp_profile_screen';
   static const spConsolidadoScreen = '/sp_consolidados_screen';
   static const spConsolidadoDetalleScreen = '/sp_consolidado_detalle_screen';
+  static const spCargaCamionScrenn = '/sp_carga_camion_screen';
 
   /*-----------------------------------------------------------------------------------*/
   static final routes = [
     /*------------------------------ EZWallet App -------------------------------------------*/
 
     GetPage(name: spSplash, page: () => const SPSplashScreen()),
+    GetPage(name: spCargaCamionScrenn, page: () => const SPCargaCamionScrenn()),
     //GetPage(name: spOnboarding, page: () => const SPOnboardingScreen()),
     GetPage(name: spLogin, page: () => const SPLoginScreen()),
     //GetPage(name: spForgotPassword, page: () => const SPForgotPasswordScreen()),
