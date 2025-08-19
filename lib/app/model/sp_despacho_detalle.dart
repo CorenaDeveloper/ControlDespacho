@@ -265,30 +265,41 @@ class SPProductoDetalle {
   final DateTime? detalleFechaActualizacion;
   final double? porcentajeUnidadesProcesadas;
   final double? porcentajeCajasProcesadas;
+  final double? tiempoProcesamientoMinutos;
+  final bool? validadoFisicamente;
+  final DateTime? fechaValidacion;
+  final String? usuarioValidacion;
+  final int? unidadesValidadas;
+  final double? cajasValidadas;
 
-  SPProductoDetalle({
-    this.id,
-    this.idSesionDespacho,
-    this.itemId,
-    this.codigoBarra,
-    this.nombreProducto,
-    this.factor,
-    this.lote,
-    this.fechaVencimiento,
-    this.unidadesRuta,
-    this.cajasRuta,
-    this.kilogramosRuta,
-    this.unidadesProcesadas,
-    this.cajasProcesadas,
-    this.kilogramosProcesados,
-    this.estadoProducto,
-    this.cantidadEscaneos,
-    this.tieneProblemas,
-    this.detalleFechaCreacion,
-    this.detalleFechaActualizacion,
-    this.porcentajeUnidadesProcesadas,
-    this.porcentajeCajasProcesadas,
-  });
+  SPProductoDetalle(
+      {this.id,
+      this.idSesionDespacho,
+      this.itemId,
+      this.codigoBarra,
+      this.nombreProducto,
+      this.factor,
+      this.lote,
+      this.fechaVencimiento,
+      this.unidadesRuta,
+      this.cajasRuta,
+      this.kilogramosRuta,
+      this.unidadesProcesadas,
+      this.cajasProcesadas,
+      this.kilogramosProcesados,
+      this.estadoProducto,
+      this.cantidadEscaneos,
+      this.tieneProblemas,
+      this.detalleFechaCreacion,
+      this.detalleFechaActualizacion,
+      this.porcentajeUnidadesProcesadas,
+      this.porcentajeCajasProcesadas,
+      this.tiempoProcesamientoMinutos,
+      this.validadoFisicamente,
+      this.fechaValidacion,
+      this.usuarioValidacion,
+      this.unidadesValidadas,
+      this.cajasValidadas});
 
   factory SPProductoDetalle.fromJson(Map<String, dynamic> json) {
     try {
@@ -320,6 +331,14 @@ class SPProductoDetalle {
             (json['PORCENTAJE_UNIDADES_PROCESADAS'] as num?)?.toDouble(),
         porcentajeCajasProcesadas:
             (json['PORCENTAJE_CAJAS_PROCESADAS'] as num?)?.toDouble(),
+        tiempoProcesamientoMinutos:
+            (json['TIEMPO_PROCESAMIENTO_MINUTOS'] as num?)?.toDouble(),
+        validadoFisicamente: json['VALIDADO_FISICAMENTE'] as bool?,
+        fechaValidacion:
+            SPDespachoDetalle._parseDateTime(json['FECHA_VALIDACION']),
+        usuarioValidacion: json['USUARIO_VALIDACION']?.toString(),
+        unidadesValidadas: (json['UNIDADES_VALIDADAS'] as num?)?.toInt(),
+        cajasValidadas: (json['CAJAS_VALIDADAS'] as num?)?.toDouble(),
       );
     } catch (e) {
       print('❌ Error parsing SPProductoDetalle: $e');
