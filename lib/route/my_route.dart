@@ -1,22 +1,11 @@
 import 'package:get/get.dart';
 import 'package:sabipay/app/views/sp_add_new_card_screen.dart';
-//import 'package:sabipay/app/views/sp_biometric_scan_screen.dart';
-//import 'package:sabipay/app/views/sp_biometric_setup_screen.dart';
-//import 'package:sabipay/app/views/sp_forgot_password_screen.dart';
 import 'package:sabipay/app/views/sp_login_screen.dart';
 import 'package:sabipay/app/views/sp_main_home_screen.dart';
 import 'package:sabipay/app/views/sp_my_account_screen.dart';
-//import 'package:sabipay/app/views/sp_new_password_screen.dart';
-//import 'package:sabipay/app/views/sp_notification_screen.dart';
-//import 'package:sabipay/app/views/sp_onboarding_screen.dart';
-//import 'package:sabipay/app/views/sp_otp_verify_screen.dart';
-//import 'package:sabipay/app/views/sp_register_screen.dart';
 import 'package:sabipay/app/views/sp_scan_card_screen.dart';
-//import 'package:sabipay/app/views/sp_scan_me_screen.dart';
-//import 'package:sabipay/app/views/sp_select_bank_screen.dart';
 import 'package:sabipay/app/views/sp_settings_screen.dart';
 import 'package:sabipay/app/views/sp_splash_screen.dart';
-//import 'package:sabipay/app/views/sp_top_up_via_bank_screen.dart';
 import 'package:sabipay/app/views/sp_scan_barcode_screen.dart';
 import 'package:sabipay/app/views/sp_history_despacho_screen.dart';
 import 'package:sabipay/app/views/sp_despacho_detalle_screen.dart';
@@ -24,6 +13,7 @@ import 'package:sabipay/app/views/sp_profile_screen.dart';
 import 'package:sabipay/app/views/sp_consolidados_screen.dart';
 import 'package:sabipay/app/views/sp_consolidado_detalle_screen.dart';
 import 'package:sabipay/app/views/sp_carga_camion_screen.dart';
+import 'package:sabipay/app/views/sp_carga_camion_detalle_screen.dart';
 
 class MyRoute {
   /*------------------------------ EZWallet App -------------------------------------------*/
@@ -54,6 +44,7 @@ class MyRoute {
   static const spConsolidadoScreen = '/sp_consolidados_screen';
   static const spConsolidadoDetalleScreen = '/sp_consolidado_detalle_screen';
   static const spCargaCamionScrenn = '/sp_carga_camion_screen';
+  static const spCargaCamionDetalleScreen = '/sp_carga_camion_detalle_screen';
 
   /*-----------------------------------------------------------------------------------*/
   static final routes = [
@@ -61,19 +52,8 @@ class MyRoute {
 
     GetPage(name: spSplash, page: () => const SPSplashScreen()),
     GetPage(name: spCargaCamionScrenn, page: () => const SPCargaCamionScrenn()),
-    //GetPage(name: spOnboarding, page: () => const SPOnboardingScreen()),
     GetPage(name: spLogin, page: () => const SPLoginScreen()),
-    //GetPage(name: spForgotPassword, page: () => const SPForgotPasswordScreen()),
-    //GetPage(name: spOtpVerify, page: () => const SPOTPVerifyScreen()),
-    //GetPage(name: spNewPassword, page: () => const SPNewPasswordScreen()),
-    //GetPage(name: spRegister, page: () => const SPRegisterScreen()),
-    //GetPage(name: spBiometric, page: () => const SPBiometricScreen()),
-    //GetPage(name: spBiometricScan, page: () => const SPBiometricScanScreen()),
     GetPage(name: spMainHomeScreen, page: () => const SpMainHomeScreen()),
-    //GetPage(name: spTopUpViaBankScreen, page: () => const SPTopUpViaBankScreen()),
-    //GetPage(name: spSelectBankScreen, page: () => const SPSelectBankScreen()),
-    //GetPage(name: spNotificationScreen, page: () => const SPNotificationScreen()),
-    //GetPage(name: spScanMeScreen, page: () => const SPScanMeScreen()),
     GetPage(name: spScanBarcodeScreen, page: () => const SPScanBarcodeScreen()),
     GetPage(
         name: spConsolidadoScreen, page: () => const SPConsolidadosScreen()),
@@ -88,7 +68,9 @@ class MyRoute {
     GetPage(
         name: spDespachoDetalle, page: () => const SPDespachoDetalleScreen()),
     GetPage(name: sPProfileScreen, page: () => const SPProfileScreen()),
-
+    GetPage(
+        name: spCargaCamionDetalleScreen,
+        page: () => const SPCargaCamionDetalleScreen()),
     /*-----------------------------------------------------------------------------------*/
   ];
 }

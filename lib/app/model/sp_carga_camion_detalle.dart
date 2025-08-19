@@ -1,123 +1,249 @@
-// lib/app/model/sp_carga_camion_detalle.dart
+// app/model/sp_consolidado_detalle.dart
+import 'package:intl/intl.dart';
 
-class CargaCamionDetalle {
-  final int? id;
-  final String? idRuta;
-  final String? codigoUser;
-  final DateTime? fechaInicio;
-  final List<ProductoCargaCamion>? productos;
+class ConsolidadoDetalleResponse {
+  final bool success;
+  final List<ConsolidadoProductoDetalle> data;
+  final int totalCount;
+  final int idConsolidado;
+  final String message;
+  final String timestamp;
 
-  CargaCamionDetalle({
-    this.id,
-    this.idRuta,
-    this.codigoUser,
-    this.fechaInicio,
-    this.productos,
+  ConsolidadoDetalleResponse({
+    required this.success,
+    required this.data,
+    required this.totalCount,
+    required this.idConsolidado,
+    required this.message,
+    required this.timestamp,
   });
 
-  factory CargaCamionDetalle.fromJson(Map<String, dynamic> json) {
-    return CargaCamionDetalle(
-      id: (json['id'] as num?)?.toInt(),
-      idRuta: json['idRuta']?.toString(),
-      codigoUser: json['codigoUser']?.toString(),
-      fechaInicio: json['fechaInicio'] != null
-          ? DateTime.tryParse(json['fechaInicio'].toString())
-          : null,
-      productos: (json['productos'] as List<dynamic>?)
-          ?.map((item) => ProductoCargaCamion.fromJson(item))
-          .toList(),
+  factory ConsolidadoDetalleResponse.fromJson(Map<String, dynamic> json) {
+    return ConsolidadoDetalleResponse(
+      success: json['success'] ?? false,
+      data: (json['data'] as List<dynamic>?)
+              ?.map((item) => ConsolidadoProductoDetalle.fromJson(
+                  item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      totalCount: json['totalCount'] ?? 0,
+      idConsolidado: json['id_Consolidado'] ?? 0,
+      message: json['message'] ?? '',
+      timestamp: json['timestamp'] ?? '',
     );
   }
 }
 
-class ProductoCargaCamion {
-  final String? itemId;
-  final String? descripcion;
-  final String? codigoBarra;
-  final String? lote;
-  final DateTime? fechaVencimiento;
-
-  // Campos específicos para validación física
-  final bool? validadoFisicamente;
-  final DateTime? fechaValidacion;
-  final String? usuarioValidacion;
-  final int? unidadesValidadas;
-  final double? cajasValidadas;
+class ConsolidadoProductoDetalle {
+  final int id;
+  final int idSesionConsolidado;
+  final String itemId;
+  final String nombreProducto;
+  final String codigoBarra;
+  final String dun14;
+  final int factor;
+  final String lote;
+  final String? fechaVencimiento;
+  final String bodega;
+  final int unidadesConsolidado;
+  final double cajasConsolidado;
+  final double kilogramosConsolidado;
+  final double librasConsolidado;
+  final double toneladasConsolidado;
+  final double mT3Cubicos;
+  final int unidadesPreparadas;
+  final double cajasPreparadas;
+  final double kilogramosPreparados;
+  final String estadoProducto;
+  final String? tiempoInicioPreparacion;
+  final String? tiempoFinPreparacion;
+  final String? usuarioPreparacion;
+  final int cantidadEscaneos;
+  final double diferenciaUnidades;
+  final bool tieneProblemas;
+  final String? descripcionProblema;
   final String? observaciones;
+  final String fechaCreacion;
+  final String fechaActualizacion;
+  final int unidadesPendientes;
+  final double cajasPendientes;
+  final double porcentajeCompletitud;
 
-  ProductoCargaCamion({
-    this.itemId,
-    this.descripcion,
-    this.codigoBarra,
-    this.lote,
+  ConsolidadoProductoDetalle({
+    required this.id,
+    required this.idSesionConsolidado,
+    required this.itemId,
+    required this.nombreProducto,
+    required this.codigoBarra,
+    required this.dun14,
+    required this.factor,
+    required this.lote,
     this.fechaVencimiento,
-    this.validadoFisicamente,
-    this.fechaValidacion,
-    this.usuarioValidacion,
-    this.unidadesValidadas,
-    this.cajasValidadas,
+    required this.bodega,
+    required this.unidadesConsolidado,
+    required this.cajasConsolidado,
+    required this.kilogramosConsolidado,
+    required this.librasConsolidado,
+    required this.toneladasConsolidado,
+    required this.mT3Cubicos,
+    required this.unidadesPreparadas,
+    required this.cajasPreparadas,
+    required this.kilogramosPreparados,
+    required this.estadoProducto,
+    this.tiempoInicioPreparacion,
+    this.tiempoFinPreparacion,
+    this.usuarioPreparacion,
+    required this.cantidadEscaneos,
+    required this.diferenciaUnidades,
+    required this.tieneProblemas,
+    this.descripcionProblema,
     this.observaciones,
+    required this.fechaCreacion,
+    required this.fechaActualizacion,
+    required this.unidadesPendientes,
+    required this.cajasPendientes,
+    required this.porcentajeCompletitud,
   });
 
-  factory ProductoCargaCamion.fromJson(Map<String, dynamic> json) {
-    return ProductoCargaCamion(
-      itemId: json['itemId']?.toString(),
-      descripcion: json['descripcion']?.toString(),
-      codigoBarra: json['codigoBarra']?.toString(),
-      lote: json['lote']?.toString(),
-      fechaVencimiento: json['fechaVencimiento'] != null
-          ? DateTime.tryParse(json['fechaVencimiento'].toString())
-          : null,
-      validadoFisicamente: json['validadoFisicamente'] as bool?,
-      fechaValidacion: json['fechaValidacion'] != null
-          ? DateTime.tryParse(json['fechaValidacion'].toString())
-          : null,
-      usuarioValidacion: json['usuarioValidacion']?.toString(),
-      unidadesValidadas: (json['unidadesValidadas'] as num?)?.toInt(),
-      cajasValidadas: (json['cajasValidadas'] as num?)?.toDouble(),
-      observaciones: json['observaciones']?.toString(),
+  factory ConsolidadoProductoDetalle.fromJson(Map<String, dynamic> json) {
+    return ConsolidadoProductoDetalle(
+      id: json['id'] ?? 0,
+      idSesionConsolidado: json['iD_SESION_CONSOLIDADO'] ?? 0,
+      itemId: json['iteM_ID'] ?? '',
+      nombreProducto: json['nombrE_PRODUCTO'] ?? '',
+      codigoBarra: json['codigO_BARRA'] ?? '',
+      dun14: json['duN14'] ?? '',
+      factor: json['factor'] ?? 1,
+      lote: json['lote'] ?? '',
+      fechaVencimiento: json['fechA_VENCIMIENTO'],
+      bodega: json['bodega'] ?? '',
+      unidadesConsolidado: json['unidadeS_CONSOLIDADO'] ?? 0,
+      cajasConsolidado: (json['cajaS_CONSOLIDADO'] ?? 0).toDouble(),
+      kilogramosConsolidado: (json['kilogramoS_CONSOLIDADO'] ?? 0).toDouble(),
+      librasConsolidado: (json['libraS_CONSOLIDADO'] ?? 0).toDouble(),
+      toneladasConsolidado: (json['toneladaS_CONSOLIDADO'] ?? 0).toDouble(),
+      mT3Cubicos: (json['mT3_CUBICOS'] ?? 0).toDouble(),
+      unidadesPreparadas: json['unidadeS_PREPARADAS'] ?? 0,
+      cajasPreparadas: (json['cajaS_PREPARADAS'] ?? 0).toDouble(),
+      kilogramosPreparados: (json['kilogramoS_PREPARADOS'] ?? 0).toDouble(),
+      estadoProducto: json['estadO_PRODUCTO'] ?? 'PENDIENTE',
+      tiempoInicioPreparacion: json['tiempO_INICIO_PREPARACION'],
+      tiempoFinPreparacion: json['tiempO_FIN_PREPARACION'],
+      usuarioPreparacion: json['usuariO_PREPARACION'],
+      cantidadEscaneos: json['cantidaD_ESCANEOS'] ?? 0,
+      diferenciaUnidades: (json['diferenciA_UNIDADES'] ?? 0).toDouble(),
+      tieneProblemas: json['tienE_PROBLEMAS'] ?? false,
+      descripcionProblema: json['descripcioN_PROBLEMA'],
+      observaciones: json['observaciones'],
+      fechaCreacion: json['fechA_CREACION'] ?? '',
+      fechaActualizacion: json['fechA_ACTUALIZACION'] ?? '',
+      unidadesPendientes: json['unidadeS_PENDIENTES'] ?? 0,
+      cajasPendientes: (json['cajaS_PENDIENTES'] ?? 0).toDouble(),
+      porcentajeCompletitud: (json['porcentajE_COMPLETITUD'] ?? 0).toDouble(),
     );
   }
 
-  // Crear copia con nuevos valores
-  ProductoCargaCamion copyWith({
-    String? itemId,
-    String? descripcion,
-    String? codigoBarra,
-    String? lote,
-    DateTime? fechaVencimiento,
-    bool? validadoFisicamente,
-    DateTime? fechaValidacion,
-    String? usuarioValidacion,
-    int? unidadesValidadas,
-    double? cajasValidadas,
-    String? observaciones,
-  }) {
-    return ProductoCargaCamion(
-      itemId: itemId ?? this.itemId,
-      descripcion: descripcion ?? this.descripcion,
-      codigoBarra: codigoBarra ?? this.codigoBarra,
-      lote: lote ?? this.lote,
-      fechaVencimiento: fechaVencimiento ?? this.fechaVencimiento,
-      validadoFisicamente: validadoFisicamente ?? this.validadoFisicamente,
-      fechaValidacion: fechaValidacion ?? this.fechaValidacion,
-      usuarioValidacion: usuarioValidacion ?? this.usuarioValidacion,
-      unidadesValidadas: unidadesValidadas ?? this.unidadesValidadas,
-      cajasValidadas: cajasValidadas ?? this.cajasValidadas,
-      observaciones: observaciones ?? this.observaciones,
-    );
+  // Getters para estados
+  bool get estaPendiente => estadoProducto.toUpperCase() == 'PENDIENTE';
+  bool get estaEnProceso =>
+      estadoProducto.toUpperCase() == 'EN_PROCESO' ||
+      estadoProducto.toUpperCase() == 'PARCIAL';
+  bool get estaCompletado =>
+      estadoProducto.toUpperCase() == 'COMPLETADO' ||
+      porcentajeCompletitud >= 100;
+  bool get tieneError => tieneProblemas;
+
+  // Getters seguros para evitar nulos
+  String get nombreSeguro =>
+      nombreProducto.isNotEmpty ? nombreProducto : 'Sin nombre';
+  String get codigoSeguro => codigoBarra.isNotEmpty ? codigoBarra : itemId;
+  String get itemSeguro => itemId.isNotEmpty ? itemId : 'Sin código';
+  String get loteSeguro => lote.isNotEmpty ? lote : '0000';
+
+  // Formateo de fecha
+  String get fechaCreacionFormateada {
+    try {
+      final date = DateTime.parse(fechaCreacion);
+      return DateFormat('dd/MM/yyyy HH:mm').format(date);
+    } catch (e) {
+      return fechaCreacion;
+    }
   }
 
-  // Métodos de utilidad
-  bool get estaValidado => validadoFisicamente == true;
+  String get fechaActualizacionFormateada {
+    try {
+      final date = DateTime.parse(fechaActualizacion);
+      return DateFormat('dd/MM/yyyy HH:mm').format(date);
+    } catch (e) {
+      return fechaActualizacion;
+    }
+  }
 
-  bool get tieneValidacion =>
-      unidadesValidadas != null || cajasValidadas != null;
+  String get fechaVencimientoFormateada {
+    if (fechaVencimiento == null) return 'N/A';
+    try {
+      final date = DateTime.parse(fechaVencimiento!);
+      return DateFormat('dd/MM/yyyy').format(date);
+    } catch (e) {
+      return fechaVencimiento!;
+    }
+  }
 
-  bool get estaPendiente => !estaValidado && !tieneValidacion;
+  // Estado formateado
+  String get estadoFormateado {
+    switch (estadoProducto.toUpperCase()) {
+      case 'PENDIENTE':
+        return 'Pendiente';
+      case 'EN_PROCESO':
+      case 'PARCIAL':
+        return 'En Proceso';
+      case 'COMPLETADO':
+        return 'Completado';
+      default:
+        return estadoProducto;
+    }
+  }
 
-  @override
-  String toString() {
-    return 'ProductoCargaCamion{itemId: $itemId, validado: $validadoFisicamente}';
+  double get totalpendiente {
+    if (factor <= 0) return 0.0;
+    final pendientes = unidadesPendientes;
+    final cajasEnteras = (pendientes / factor).floor();
+    final unidadesSueltas = pendientes - (cajasEnteras * factor);
+    final unidadesFormateadas = unidadesSueltas / 1000.0;
+
+    return cajasEnteras + unidadesFormateadas;
+  }
+
+  double get totalGeneral {
+    if (factor <= 0) return 0.0;
+    final unidades = unidadesConsolidado;
+    final cajasEnteras = (unidades / factor).floor();
+    final unidadesSueltas = unidades - (cajasEnteras * factor);
+    final unidadesFormateadas = unidadesSueltas / 1000.0;
+
+    return cajasEnteras + unidadesFormateadas;
+  }
+
+  // Información de progreso
+  String get progresoTexto {
+    return '${unidadesPreparadas}/${unidadesConsolidado} unidades';
+  }
+
+  String get progresoCajasTexto {
+    return '${cajasPreparadas.toStringAsFixed(2)}/${cajasConsolidado.toStringAsFixed(2)} cajas';
+  }
+
+  // Validación para procesamiento
+  bool get puedeSerProcesado => !estaCompletado && !tieneError;
+
+  // Cantidad disponible para procesar
+  int get cantidadDisponible => unidadesPendientes;
+
+  // Información del lote (importante para consolidados)
+  String get informacionLote {
+    if (lote.isNotEmpty) {
+      return 'Lote: $lote';
+    }
+    return 'Sin lote';
   }
 }

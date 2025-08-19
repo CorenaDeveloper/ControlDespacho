@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sabipay/app/model/sp_carga_camion.dart';
+import 'package:sabipay/route/my_route.dart';
 import 'package:sabipay/services/route_service.dart';
 import 'package:sabipay/constant/sp_colors.dart';
 import 'package:intl/intl.dart';
@@ -109,13 +110,10 @@ class SPCargaCamionController extends GetxController {
       return;
     }
 
-    // TODO: Implementar navegación al detalle de productos de la carga
-    _showInfoMessage(
-        'Funcionalidad en desarrollo - Detalle de productos de la carga');
-    // Get.toNamed(
-    //   MyRoute.spCargaCamionDetalleScreen,
-    //   arguments: carga.id,
-    // );
+    Get.toNamed(
+      MyRoute.spCargaCamionDetalleScreen,
+      arguments: carga.id,
+    );
   }
 
   /// Obtener color para cargas finalizadas pendientes
