@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sabipay/app/controller/sp_carga_camion_detalle_controller.dart';
-import 'package:sabipay/app/model/sp_carga_camion_detalle.dart';
 import 'package:sabipay/app/model/sp_despacho_detalle.dart';
 import 'package:sabipay/constant/sp_colors.dart';
 import 'package:sabipay/sabipy_theme/sp_wallet_theme.dart';

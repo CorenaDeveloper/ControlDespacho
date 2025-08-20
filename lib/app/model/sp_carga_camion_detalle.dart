@@ -1,15 +1,15 @@
 // app/model/sp_consolidado_detalle.dart
 import 'package:intl/intl.dart';
 
-class ConsolidadoDetalleResponse {
+class DetalleResponseRuta {
   final bool success;
-  final List<ConsolidadoProductoDetalle> data;
+  final List<ProductoDetalleRuta> data;
   final int totalCount;
   final int idConsolidado;
   final String message;
   final String timestamp;
 
-  ConsolidadoDetalleResponse({
+  DetalleResponseRuta({
     required this.success,
     required this.data,
     required this.totalCount,
@@ -18,12 +18,12 @@ class ConsolidadoDetalleResponse {
     required this.timestamp,
   });
 
-  factory ConsolidadoDetalleResponse.fromJson(Map<String, dynamic> json) {
-    return ConsolidadoDetalleResponse(
+  factory DetalleResponseRuta.fromJson(Map<String, dynamic> json) {
+    return DetalleResponseRuta(
       success: json['success'] ?? false,
       data: (json['data'] as List<dynamic>?)
-              ?.map((item) => ConsolidadoProductoDetalle.fromJson(
-                  item as Map<String, dynamic>))
+              ?.map((item) =>
+                  ProductoDetalleRuta.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
       totalCount: json['totalCount'] ?? 0,
@@ -34,7 +34,7 @@ class ConsolidadoDetalleResponse {
   }
 }
 
-class ConsolidadoProductoDetalle {
+class ProductoDetalleRuta {
   final int id;
   final int idSesionConsolidado;
   final String itemId;
@@ -69,7 +69,7 @@ class ConsolidadoProductoDetalle {
   final double cajasPendientes;
   final double porcentajeCompletitud;
 
-  ConsolidadoProductoDetalle({
+  ProductoDetalleRuta({
     required this.id,
     required this.idSesionConsolidado,
     required this.itemId,
@@ -105,8 +105,8 @@ class ConsolidadoProductoDetalle {
     required this.porcentajeCompletitud,
   });
 
-  factory ConsolidadoProductoDetalle.fromJson(Map<String, dynamic> json) {
-    return ConsolidadoProductoDetalle(
+  factory ProductoDetalleRuta.fromJson(Map<String, dynamic> json) {
+    return ProductoDetalleRuta(
       id: json['id'] ?? 0,
       idSesionConsolidado: json['iD_SESION_CONSOLIDADO'] ?? 0,
       itemId: json['iteM_ID'] ?? '',
@@ -219,6 +219,16 @@ class ConsolidadoProductoDetalle {
     final unidades = unidadesConsolidado;
     final cajasEnteras = (unidades / factor).floor();
     final unidadesSueltas = unidades - (cajasEnteras * factor);
+    final unidadesFormateadas = unidadesSueltas / 1000.0;
+
+    return cajasEnteras + unidadesFormateadas;
+  }
+
+  double get totalProcesadas {
+    if (factor <= 0) return 0.0;
+    final procesadas = unidadesPreparadas;
+    final cajasEnteras = (procesadas / factor).floor();
+    final unidadesSueltas = procesadas - (cajasEnteras * factor);
     final unidadesFormateadas = unidadesSueltas / 1000.0;
 
     return cajasEnteras + unidadesFormateadas;

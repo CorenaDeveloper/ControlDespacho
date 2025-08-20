@@ -1,11 +1,10 @@
-// lib/app/controller/sp_carga_camion_detalle_controller.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:sabipay/app/controller/sp_cards_controller.dart';
 import 'package:sabipay/app/model/sp_carga_camion_detalle.dart';
-import 'package:sabipay/app/model/sp_despacho_detalle.dart'; // Agregar este import
+import 'package:sabipay/app/model/sp_carga_camion.dart';
+import 'package:sabipay/app/model/sp_despacho_detalle.dart';
 import 'package:sabipay/route/my_route.dart';
 import 'package:sabipay/services/route_service.dart';
 import 'package:sabipay/constant/sp_colors.dart';
@@ -24,10 +23,11 @@ class SPCargaCamionDetalleController extends GetxController {
   final RxBool isModalOpen = false.obs;
   final RxBool isProcessingModal = false.obs;
   final RxBool isFinalizingModalOpen = false.obs;
+
   // Datos principales
-  final despacho = Rxn<SPDespachoDetalle>();
-  final productos = <SPProductoDetalle>[].obs;
-  final filteredProductos = <SPProductoDetalle>[].obs;
+  final despacho = Rxn<DetalleResponseRuta>();
+  final productos = <ProductoDetalleRuta>[].obs;
+  final filteredProductos = <ProductoDetalleRuta>[].obs;
 
   // Filtros y búsqueda
   final selectedFilterIndex = 1.obs;
@@ -675,12 +675,12 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
   /// Verificar si un producto puede ser procesado
-  bool puedeSerProcesado(SPProductoDetalle producto) {
+  bool puedeSerProcesado(ProductoDetalleRuta producto) {
     return !producto.estaCompletado;
   }
 
   /// Buscar producto por código de barras
-  SPProductoDetalle? _findProductByBarcode(String barcode) {
+  ProductoDetalleRuta? _findProductByBarcode(String barcode) {
     if (productos.isEmpty || barcode.isEmpty) return null;
 
     // Normalizar el código escaneado
@@ -917,7 +917,7 @@ class SPCargaCamionDetalleController extends GetxController {
     });
   }
 
-  /// Modal simplificado con validación básica y funcionalidad Enter
+  /// Modal para visualizar los datos del producto escaneado
   Widget _buildProcessModal(BuildContext context, SPProductoDetalle producto) {
     final TextEditingController cajasController = TextEditingController();
     final TextEditingController unidadesController = TextEditingController();
@@ -1043,7 +1043,7 @@ class SPCargaCamionDetalleController extends GetxController {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '${producto.unidadesProcesadas ?? 0}/${producto.unidadesRuta ?? 0}',
+                            '${producto.unidadesProcesadas ?? 0} Procesadas',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -1196,44 +1196,6 @@ class SPCargaCamionDetalleController extends GetxController {
                     // Información de totales y pendientes (más compacta)
                     Row(
                       children: [
-                        // Total (menos destacado)
-                        Expanded(
-                          child: Container(
-                            padding:
-                                const EdgeInsets.all(6), // ✅ REDUCIDO de 8 a 6
-                            decoration: BoxDecoration(
-                              color: spColorGrey500.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(
-                                  6), // ✅ REDUCIDO de 8 a 6
-                              border: Border.all(
-                                  color: spColorGrey500.withOpacity(0.2)),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Total',
-                                  style: TextStyle(
-                                    fontSize: 9, // ✅ REDUCIDO de 10 a 9
-                                    fontWeight: FontWeight.w500,
-                                    color: spColorGrey600,
-                                  ),
-                                ),
-                                const SizedBox(
-                                    height: 1), // ✅ REDUCIDO de 2 a 1
-                                Text(
-                                  '${producto.totalGeneral.toStringAsFixed(3)}',
-                                  style: TextStyle(
-                                    fontSize: 14, // ✅ REDUCIDO de 13 a 12
-                                    fontWeight: FontWeight.bold,
-                                    color: spColorGrey700,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6), //  REDUCIDO de 8 a 6
-
                         // Pendientes (MÁS DESTACADO pero más compacto)
                         Expanded(
                           flex: 2,
@@ -1261,7 +1223,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                     const SizedBox(
                                         width: 3), // ✅ REDUCIDO de 4 a 3
                                     Text(
-                                      'PENDIENTES',
+                                      'PROCESADAS',
                                       style: TextStyle(
                                         fontSize: 10, // ✅ REDUCIDO de 11 a 10
                                         fontWeight: FontWeight.w700,
@@ -1275,7 +1237,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                 const SizedBox(
                                     height: 2), // ✅ REDUCIDO de 4 a 2
                                 Text(
-                                  '${producto.totalpendiente.toStringAsFixed(3)}',
+                                  '${producto.toStringAsFixed(3)}',
                                   style: TextStyle(
                                     fontSize: 16, // ✅ REDUCIDO de 18 a 16
                                     fontWeight: FontWeight.w900,
@@ -1283,7 +1245,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                   ),
                                 ),
                                 Text(
-                                  '${producto.unidadesPendientes} Unidades | ${producto.cajasPendientes.toStringAsFixed(0)} cajas',
+                                  '${producto.unidadesProcesadas} Unidades | ${producto.cajasProcesadas} cajas',
                                   style: TextStyle(
                                     fontSize: 10, // ✅ REDUCIDO de 11 a 10
                                     fontWeight: FontWeight.w600,
