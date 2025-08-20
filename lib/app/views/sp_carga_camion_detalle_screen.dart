@@ -800,7 +800,7 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                       children: [
                         4.height,
                         Text(
-                          '${producto.totalProcesadas} Cargadas (C.0U)',
+                          '${producto.totalProcesadas.toStringAsFixed(3)} Cargadas (C.0U)',
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -822,23 +822,66 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                 8.height,
                 // 🆕 Mostrar botón solo si puede ser procesado
                 if (puedeSerProcesado)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        controller.openProcessModal(context, producto);
-                        // El focus se manejará automáticamente por el observer
-                      },
-                      icon: const Icon(Icons.play_arrow, size: 16),
-                      label: const Text('Cargar Camión'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: spColorPrimary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      children: [
+                        // Botón Restar (más pequeño)
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              controller.openProcessModal(context, producto,
+                                  esResta: true);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: spColorError500,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            icon: Icon(Icons.remove, size: 14),
+                            label: Text(
+                              'Restar',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+
+                        const SizedBox(width: 8),
+
+                        // Botón Agregar (más largo)
+                        Expanded(
+                          flex: 3,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              controller.openProcessModal(context, producto,
+                                  esResta: false);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: spColorPrimary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            icon: Icon(Icons.add, size: 14),
+                            label: Text(
+                              'Agregar',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 else

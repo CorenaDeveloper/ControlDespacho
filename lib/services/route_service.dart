@@ -359,6 +359,10 @@ class RouteService extends GetxService {
     String? observaciones,
   }) async {
     try {
+      print('Cantidad enviada ${cantidadCargada}');
+      print('itemId enviada ${itemId}');
+      print('lote enviada ${lote}');
+
       final response = await _apiService.post<Map<String, dynamic>>(
         'DS_PORTAL_DTRACK_Hoja_Despacho_SV/ProcesarEscaneoProductoVidacion',
         body: {

@@ -915,7 +915,8 @@ class SPCargaCamionDetalleController extends GetxController {
     }
   }
 
-  void openProcessModal(BuildContext context, SPProductoDetalle producto) {
+  void openProcessModal(BuildContext context, SPProductoDetalle producto,
+      {bool esResta = false}) {
     // Marcar modal como abierto
     isModalOpen.value = true;
 
@@ -925,7 +926,8 @@ class SPCargaCamionDetalleController extends GetxController {
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
-      builder: (context) => _buildProcessModal(context, producto),
+      builder: (context) =>
+          _buildProcessModal(context, producto, esResta: esResta),
     ).whenComplete(() {
       // Marcar modal como cerrado cuando se complete
       isModalOpen.value = false;
@@ -933,8 +935,88 @@ class SPCargaCamionDetalleController extends GetxController {
     });
   }
 
+  Future<void> procesarProductoConTipo(SPProductoDetalle producto,
+      {int cajas = 0, int unidades = 0, bool esResta = false}) async {
+    try {
+      if (despacho.value?.id == null) {
+        _showErrorMessage('No se encontró ID de sesión válido');
+        return;
+      }
+      if (cajas <= 0 && unidades <= 0) {
+        _showWarningMessage('Debe ingresar al menos una caja o unidad');
+        return;
+      }
+
+      // Mostrar indicador de carga
+      String accion = esResta ? 'Restando' : 'Agregando';
+      _showInfoMessage('$accion producto...');
+
+      // Preparar datos para la API
+      final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
+      var cantidadTotal = cantidadCajaUnidad + unidades;
+
+      // 🔥 CLAVE: Aplicar signo negativo si es resta
+      if (esResta) {
+        cantidadTotal = -cantidadTotal;
+      }
+
+      String? itemId = (producto.itemId ?? '').trim();
+      if (itemId.isEmpty) {
+        itemId = (producto.itemId ?? '').trim();
+      }
+
+      if (itemId.isEmpty) {
+        _showErrorMessage(
+            'El producto no tiene un código válido para procesar');
+        return;
+      }
+
+      String? lote = (producto.lote ?? '').trim();
+      if (lote.isEmpty) {
+        lote = (producto.itemId ?? '').trim();
+      }
+
+      if (lote.isEmpty) {
+        _showErrorMessage(
+            'El producto no tiene un código válido para procesar');
+        return;
+      }
+
+      // Llamar a la API con cantidad positiva o negativa
+      final response = await _routeService.procesarEscaneoProductoValidacion(
+        idSesion: despacho.value!.id!,
+        itemId: itemId,
+        lote: lote,
+        cantidadCargada: cantidadTotal, // ← Puede ser positivo o negativo
+        usuarioValidacion: userCode,
+        observaciones:
+            '${esResta ? "Restado" : "Agregado"}: $cajas cajas, $unidades unidades',
+      );
+
+      if (response.isSuccess) {
+        // ✅ ÉXITO - Mostrar mensaje de éxito
+        String mensaje = esResta
+            ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
+            : 'Agregado exitosamente: $cajas cajas, $unidades unidades';
+        _showSuccessMessage(mensaje);
+
+        await loadDespachoDetalle();
+      } else {
+        // ❌ ERROR - La API nos dice qué está mal
+        String mensajeError = response.message.isNotEmpty
+            ? response.message
+            : 'Error al procesar producto';
+        _showErrorMessage(mensajeError);
+      }
+    } catch (e) {
+      print('❌ Error inesperado procesando producto: $e');
+      _showErrorMessage('Error inesperado: ${e.toString()}');
+    }
+  }
+
   /// Modal para visualizar los datos del producto escaneado
-  Widget _buildProcessModal(BuildContext context, SPProductoDetalle producto) {
+  Widget _buildProcessModal(BuildContext context, SPProductoDetalle producto,
+      {bool esResta = false}) {
     final TextEditingController cajasController = TextEditingController();
     final TextEditingController unidadesController = TextEditingController();
 
@@ -971,7 +1053,8 @@ class SPCargaCamionDetalleController extends GetxController {
       await Future.delayed(const Duration(milliseconds: 300));
 
       // Procesar producto
-      await procesarProducto(producto, cajas: cajas, unidades: unidades);
+      await procesarProductoConTipo(producto,
+          cajas: cajas, unidades: unidades, esResta: esResta);
     }
 
     // Función para cerrar modal sin procesar
@@ -1440,8 +1523,8 @@ class SPCargaCamionDetalleController extends GetxController {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: const Text(
-                              'Procesar (ENT)',
+                            child: Text(
+                              esResta ? 'Restar (ENT)' : 'Procesar (ENT)',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
