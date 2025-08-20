@@ -359,10 +359,6 @@ class RouteService extends GetxService {
     String? observaciones,
   }) async {
     try {
-      print('Cantidad enviada ${cantidadCargada}');
-      print('itemId enviada ${itemId}');
-      print('lote enviada ${lote}');
-
       final response = await _apiService.post<Map<String, dynamic>>(
         'DS_PORTAL_DTRACK_Hoja_Despacho_SV/ProcesarEscaneoProductoVidacion',
         body: {
@@ -370,6 +366,43 @@ class RouteService extends GetxService {
           'itemId': itemId,
           'lote': lote,
           'cantidadCargada': cantidadCargada,
+          'usuarioValidacion': usuarioValidacion,
+          if (observaciones != null && observaciones.isNotEmpty)
+            'observaciones': observaciones,
+        },
+        useAuthHeaders: true,
+      );
+      if (response.isSuccess) {
+        return response;
+      } else {
+        print('❌ Error al procesar escaneo: ${response.message}');
+        return response;
+      }
+    } catch (e) {
+      print('❌ Error inesperado al procesar escaneo: $e');
+      return ApiResponse.error(
+        message: 'Error inesperado al procesar escaneo: $e',
+        details: 'Error',
+        statusCode: -1,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>>
+      ProcesarProductoValidacionFinalizar({
+    required int idSesion,
+    required String itemId,
+    required String lote,
+    required String usuarioValidacion,
+    String? observaciones,
+  }) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        'DS_PORTAL_DTRACK_Hoja_Despacho_SV/ProcesarProductoValidacionFinalizar',
+        body: {
+          'idSesion': idSesion,
+          'itemId': itemId,
+          'lote': lote,
           'usuarioValidacion': usuarioValidacion,
           if (observaciones != null && observaciones.isNotEmpty)
             'observaciones': observaciones,
