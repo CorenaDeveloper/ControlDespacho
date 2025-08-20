@@ -355,7 +355,13 @@ class SPProductoDetalle {
       (estadoProducto?.toUpperCase() ?? '') == 'PENDIENTE';
   bool get estaEnProceso => (estadoProducto?.toUpperCase() ?? '') == 'PARCIAL';
 
-  bool get estaValidadoFisicamente => validadoFisicamente ?? false;
+  bool get estaValidadoFisicamente {
+    // Si tiene validación física explícita, usar esa
+    if (validadoFisicamente == true) return true;
+
+    // Si no tiene unidades procesadas ni cajas, se considera automáticamente validado
+    return (unidadesProcesadas ?? 0) == 0 && (cajasProcesadas ?? 0) == 0;
+  }
 
   bool get tieneValidacionPendiente =>
       (unidadesProcesadas ?? 0) > 0 && !estaValidadoFisicamente;
@@ -374,13 +380,18 @@ class SPProductoDetalle {
   }
 
   String get estadoValidacion {
-    if (!estaValidadoFisicamente) {
-      return (unidadesProcesadas ?? 0) > 0
-          ? 'Pendiente Validación'
-          : 'No Procesado';
+    if (estaValidadoFisicamente) {
+      // Distinguir entre validación automática y física
+      if ((unidadesProcesadas ?? 0) == 0) {
+        return 'Validado Automático'; // Sin unidades que validar
+      } else {
+        return 'Validado Físicamente'; // Validado manualmente
+      }
+    } else if ((unidadesProcesadas ?? 0) > 0) {
+      return 'Pendiente Validación';
+    } else {
+      return 'No Procesado';
     }
-    if (validacionCompleta) return 'Validado Completo';
-    return 'Validado Parcial';
   }
 
   // ✅ INFORMACIÓN DE VALIDACIÓN PARA UI
@@ -470,8 +481,8 @@ class SPProductoDetalle {
 
   double get totalProcesadas {
     if (factor == null || factor! <= 0) return 0.0;
-    final procesadas = unidadesValidadas;
-    final cajasEnteras = (procesadas! / factor!).floor();
+    final procesadas = unidadesValidadas ?? 0;
+    final cajasEnteras = (procesadas / factor!).floor();
     final unidadesSueltas = procesadas - (cajasEnteras * factor!);
     final unidadesFormateadas = unidadesSueltas / 1000.0;
 

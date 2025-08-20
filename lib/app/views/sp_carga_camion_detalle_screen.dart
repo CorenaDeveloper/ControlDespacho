@@ -798,27 +798,9 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: controller
-                                .getProductStatusColor(producto)
-                                .withAlpha(26),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            producto.estadoDescripcion,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: controller.getProductStatusColor(producto),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
                         4.height,
                         Text(
-                          '${producto.unidadesProcesadas ?? 0} Proc /${producto.unidadesRuta ?? 0} Tot',
+                          '${producto.totalProcesadas} Cargadas (C.0U)',
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -848,7 +830,7 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                         // El focus se manejará automáticamente por el observer
                       },
                       icon: const Icon(Icons.play_arrow, size: 16),
-                      label: const Text('Trabajar Producto'),
+                      label: const Text('Cargar Camión'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: spColorPrimary,
                         foregroundColor: Colors.white,

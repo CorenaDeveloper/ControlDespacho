@@ -671,8 +671,11 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
   bool puedeSerProcesado(SPProductoDetalle producto) {
+    // Solo se puede validar si:
+    // 1. Tiene unidades procesadas > 0 (hay algo que validar)
+    // 2. NO está validado físicamente aún
     return (producto.unidadesProcesadas ?? 0) > 0 &&
-        !producto.estaValidadoFisicamente;
+        (producto.validadoFisicamente != true);
   }
 
   /// Buscar producto por código de barras
@@ -833,17 +836,11 @@ class SPCargaCamionDetalleController extends GetxController {
   /// Obtener color del estado del producto
   Color getProductStatusColor(SPProductoDetalle producto) {
     if (producto.estaValidadoFisicamente) {
-      if (producto.validacionCompleta) {
-        return spColorSuccess500; // Verde: Completamente validado
-      } else {
-        return spColorTeal600; // Azul: Validado parcialmente
-      }
+      return spColorSuccess500; // Verde: Validado (físicamente o automáticamente)
+    } else if ((producto.unidadesProcesadas ?? 0) > 0) {
+      return spWarning500; // Amarillo: Procesado pero no validado
     } else {
-      if ((producto.unidadesProcesadas ?? 0) > 0) {
-        return spWarning500; // Amarillo: Procesado pero no validado
-      } else {
-        return spColorGrey400; // Gris: No procesado ni validado
-      }
+      return spColorGrey400; // Gris: No procesado
     }
   }
 
@@ -1060,7 +1057,7 @@ class SPCargaCamionDetalleController extends GetxController {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '${producto.unidadesProcesadas ?? 0} Procesadas',
+                            '${producto.unidadesValidadas ?? 0} Uds cargadas',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -1239,7 +1236,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                     const SizedBox(
                                         width: 3), // ✅ REDUCIDO de 4 a 3
                                     Text(
-                                      'PROCESADAS',
+                                      'CARGADO',
                                       style: TextStyle(
                                         fontSize: 10, // ✅ REDUCIDO de 11 a 10
                                         fontWeight: FontWeight.w700,
@@ -1261,7 +1258,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                   ),
                                 ),
                                 Text(
-                                  '${producto.unidadesProcesadas} Unidades | ${producto.cajasProcesadas} cajas',
+                                  '${producto.unidadesValidadas} Unidades | ${producto.cajasValidadas} cajas',
                                   style: TextStyle(
                                     fontSize: 10, // ✅ REDUCIDO de 11 a 10
                                     fontWeight: FontWeight.w600,
@@ -1482,14 +1479,6 @@ class SPCargaCamionDetalleController extends GetxController {
       // Preparar datos para la API
       final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
       final cantidadTotal = cantidadCajaUnidad + unidades;
-      final disponibles =
-          (producto.unidadesRuta ?? 0) - (producto.unidadesProcesadas ?? 0);
-
-      if (cantidadTotal > disponibles) {
-        _showErrorMessage(
-            'La cantidad ingresada supera la cantidad disponible.');
-        return;
-      }
 
       String? itemId = (producto.itemId ?? '').trim();
       if (itemId.isEmpty) {
