@@ -1024,9 +1024,9 @@ class SPCargaCamionDetalleController extends GetxController {
 
       String? itemId = (producto.itemId ?? '').trim();
       if (itemId.isEmpty) {
-        itemId = (producto.codigoSeguro ?? '').trim();
+        itemId = (producto.codigoSeguro).trim();
         if (itemId.isEmpty) {
-          itemId = (producto.itemSeguro ?? '').trim();
+          itemId = (producto.itemSeguro).trim();
         }
       }
 
@@ -1038,7 +1038,7 @@ class SPCargaCamionDetalleController extends GetxController {
 
       String? lote = (producto.lote ?? '').trim();
       if (lote.isEmpty) {
-        lote = (producto.loteSeguro ?? '').trim();
+        lote = (producto.loteSeguro).trim();
         if (lote.isEmpty) {
           lote = '0000';
         }
@@ -1309,7 +1309,7 @@ class SPCargaCamionDetalleController extends GetxController {
                               const SizedBox(width: 8),
                               Text(
                                 esResta
-                                    ? 'Restando del carggado'
+                                    ? 'Restando del cargado'
                                     : 'Agregando al camión',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
@@ -1466,7 +1466,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${producto.totalProcesadas ?? 0}',
+                                  '${producto.totalProcesadas}',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w900,

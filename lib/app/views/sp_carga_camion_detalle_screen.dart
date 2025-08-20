@@ -717,215 +717,205 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: puedeSerProcesado
-              ? () {
-                  controller.openProcessModal(context, producto);
-                  // El focus se manejará automáticamente por el observer
-                }
-              : null, // 🆕 Deshabilitar tap si está completado
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: controller.getProductStatusColor(producto),
-                        shape: BoxShape.circle,
-                      ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: controller.getProductStatusColor(producto),
+                      shape: BoxShape.circle,
                     ),
-                    8.width,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            producto.nombreSeguro,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              // 🆕 Cambiar opacidad si está completado
-                              color: puedeSerProcesado
-                                  ? null
-                                  : (themeController.isDarkMode
-                                      ? Colors.white54
-                                      : Colors.black54),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                  ),
+                  8.width,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          producto.nombreSeguro,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            // 🆕 Cambiar opacidad si está completado
+                            color: puedeSerProcesado
+                                ? null
+                                : (themeController.isDarkMode
+                                    ? Colors.white54
+                                    : Colors.black54),
                           ),
-                          4.height,
-                          Text(
-                            'Item: ${producto.itemSeguro} | Lote: ${producto.loteSeguro}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: themeController.isDarkMode
-                                  ? spColorGrey400
-                                  : spColorGrey600,
-                            ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        4.height,
+                        Text(
+                          'Item: ${producto.itemSeguro} | Lote: ${producto.loteSeguro}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: themeController.isDarkMode
+                                ? spColorGrey400
+                                : spColorGrey600,
                           ),
-                          if (producto.codigoBarra?.isNotEmpty == true) ...[
-                            2.height,
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.qr_code,
-                                  size: 12,
+                        ),
+                        if (producto.codigoBarra?.isNotEmpty == true) ...[
+                          2.height,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.qr_code,
+                                size: 12,
+                                color: themeController.isDarkMode
+                                    ? spColorGrey400
+                                    : spColorGrey600,
+                              ),
+                              4.width,
+                              Text(
+                                producto.codigoBarra!,
+                                style: theme.textTheme.bodySmall?.copyWith(
                                   color: themeController.isDarkMode
                                       ? spColorGrey400
                                       : spColorGrey600,
+                                  fontFamily: 'monospace',
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                4.width,
-                                Text(
-                                  producto.codigoBarra!,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: themeController.isDarkMode
-                                        ? spColorGrey400
-                                        : spColorGrey600,
-                                    fontFamily: 'monospace',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        4.height,
-                        Text(
-                          '${producto.totalProcesadas.toStringAsFixed(3)} Cargadas (C.0U)',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                       ],
                     ),
-                  ],
-                ),
-                8.height,
-                LinearProgressIndicator(
-                  value: producto.progreso,
-                  backgroundColor: themeController.isDarkMode
-                      ? spColorGrey700
-                      : spColorGrey200,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    controller.getProductStatusColor(producto),
                   ),
-                ),
-                8.height,
-                // 🆕 Mostrar botón solo si puede ser procesado
-                if (puedeSerProcesado)
-                  Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        // Botón Restar (solo si puede restar)
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                            // ✅ VALIDACIÓN: Solo habilitar si puede restar
-                            onPressed: controller.puedeRestar(producto)
-                                ? () {
-                                    controller.openProcessModal(
-                                        context, producto,
-                                        esResta: true);
-                                  }
-                                : null, // Botón deshabilitado si no puede restar
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: controller.puedeRestar(producto)
-                                  ? spColorError500
-                                  : spColorGrey400, // Color gris si está deshabilitado
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            icon: Icon(Icons.remove, size: 14),
-                            label: Text(
-                              controller.puedeRestar(producto)
-                                  ? 'Restar'
-                                  : 'Sin Stock', // Texto diferente si no puede restar
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      4.height,
+                      Text(
+                        '${producto.totalProcesadas.toStringAsFixed(3)} Cargadas (C.0U)',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-
-                        const SizedBox(width: 8),
-
-                        // Botón Agregar (siempre habilitado)
-                        Expanded(
-                          flex: 3,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              controller.openProcessModal(context, producto,
-                                  esResta: false);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: spColorPrimary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            icon: Icon(Icons.add, size: 14),
-                            label: Text(
-                              'Agregar',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  // 🆕 Mostrar estado completado en lugar del botón
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: spColorSuccess500.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: spColorSuccess500.withOpacity(0.3),
                       ),
+                    ],
+                  ),
+                ],
+              ),
+              8.height,
+              LinearProgressIndicator(
+                value: producto.progreso,
+                backgroundColor: themeController.isDarkMode
+                    ? spColorGrey700
+                    : spColorGrey200,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  controller.getProductStatusColor(producto),
+                ),
+              ),
+              8.height,
+              // 🆕 Mostrar botón solo si puede ser procesado
+              if (puedeSerProcesado)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    children: [
+                      // Botón Restar (solo si puede restar)
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          // ✅ VALIDACIÓN: Solo habilitar si puede restar
+                          onPressed: controller.puedeRestar(producto)
+                              ? () {
+                                  controller.openProcessModal(context, producto,
+                                      esResta: true);
+                                }
+                              : null, // Botón deshabilitado si no puede restar
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: controller.puedeRestar(producto)
+                                ? spColorError500
+                                : spColorGrey400, // Color gris si está deshabilitado
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          icon: Icon(Icons.remove, size: 14),
+                          label: Text(
+                            controller.puedeRestar(producto)
+                                ? 'Restar'
+                                : 'Sin Stock', // Texto diferente si no puede restar
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Botón Agregar (siempre habilitado)
+                      Expanded(
+                        flex: 3,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            controller.openProcessModal(context, producto,
+                                esResta: false);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: spColorPrimary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          icon: Icon(Icons.add, size: 14),
+                          label: Text(
+                            'Agregar',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                // 🆕 Mostrar estado completado en lugar del botón
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: spColorSuccess500.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: spColorSuccess500.withOpacity(0.3),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          size: 16,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        size: 16,
+                        color: spColorSuccess500,
+                      ),
+                      8.width,
+                      Text(
+                        'Producto Completado',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                           color: spColorSuccess500,
                         ),
-                        8.width,
-                        Text(
-                          'Producto Completado',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: spColorSuccess500,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
