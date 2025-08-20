@@ -25,8 +25,19 @@ class SPCargaCamionDetalleController extends GetxController {
   final despacho = Rxn<SPDespachoDetalle>();
   final productos = <SPProductoDetalle>[].obs;
   final filteredProductos = <SPProductoDetalle>[].obs;
+
   String get userCode {
     return box.read('user_code') ?? '';
+  }
+
+  // Solo se puede restar si hay unidades validadas > 0
+  bool puedeRestar(SPProductoDetalle producto) {
+    return (producto.unidadesValidadas ?? 0) > 0;
+  }
+
+  // Siempre se puede agregar (no hay límite superior por ahora)
+  bool puedeAgregar(SPProductoDetalle producto) {
+    return true;
   }
 
   // Filtros y búsqueda
@@ -43,6 +54,37 @@ class SPCargaCamionDetalleController extends GetxController {
   final productosValidados = 0.obs; // Antes: productosCompletados
   final productosNoValidados = 0.obs; // Antes: productosPendientes
   final progresoValidacion = 0.0.obs; // Antes: progresoGeneral
+
+  bool validarOperacion(
+      SPProductoDetalle producto, int cajas, int unidades, bool esResta) {
+    // Validación básica: debe haber cantidad
+    if (cajas <= 0 && unidades <= 0) {
+      _showWarningMessage('Debe ingresar al menos una caja o unidad');
+      return false;
+    }
+
+    // Validación específica para resta
+    if (esResta) {
+      final unidadesValidadas = producto.unidadesValidadas ?? 0;
+
+      if (unidadesValidadas <= 0) {
+        _showWarningMessage('No hay unidades validadas para restar');
+        return false;
+      }
+
+      // Calcular cantidad total a restar
+      final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
+      final cantidadTotalARestar = cantidadCajaUnidad + unidades;
+
+      if (cantidadTotalARestar > unidadesValidadas) {
+        _showWarningMessage('No puede restar $cantidadTotalARestar unidades.\n'
+            'Solo hay ${unidadesValidadas} unidades validadas.');
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   void _updateStatistics() {
     if (productos.isEmpty) {
@@ -935,6 +977,8 @@ class SPCargaCamionDetalleController extends GetxController {
     });
   }
 
+// SIMPLIFICADO - Solo modifica el método procesarProductoConTipo:
+
   Future<void> procesarProductoConTipo(SPProductoDetalle producto,
       {int cajas = 0, int unidades = 0, bool esResta = false}) async {
     try {
@@ -942,9 +986,27 @@ class SPCargaCamionDetalleController extends GetxController {
         _showErrorMessage('No se encontró ID de sesión válido');
         return;
       }
+
+      // ✅ VALIDACIÓN SIMPLE SIN MÉTODOS EXTRA
       if (cajas <= 0 && unidades <= 0) {
         _showWarningMessage('Debe ingresar al menos una caja o unidad');
         return;
+      }
+
+      // ✅ VALIDACIÓN SIMPLE PARA RESTA
+      if (esResta) {
+        final unidadesDisponibles = producto.unidadesValidadas ?? 0;
+        if (unidadesDisponibles <= 0) {
+          _showWarningMessage('No hay unidades validadas para restar');
+          return;
+        }
+
+        final cantidadTotal = (producto.factor ?? 0) * cajas + unidades;
+        if (cantidadTotal > unidadesDisponibles) {
+          _showWarningMessage('No puede restar $cantidadTotal unidades.\n'
+              'Solo hay $unidadesDisponibles unidades disponibles.');
+          return;
+        }
       }
 
       // Mostrar indicador de carga
@@ -962,7 +1024,10 @@ class SPCargaCamionDetalleController extends GetxController {
 
       String? itemId = (producto.itemId ?? '').trim();
       if (itemId.isEmpty) {
-        itemId = (producto.itemId ?? '').trim();
+        itemId = (producto.codigoSeguro ?? '').trim();
+        if (itemId.isEmpty) {
+          itemId = (producto.itemSeguro ?? '').trim();
+        }
       }
 
       if (itemId.isEmpty) {
@@ -973,12 +1038,14 @@ class SPCargaCamionDetalleController extends GetxController {
 
       String? lote = (producto.lote ?? '').trim();
       if (lote.isEmpty) {
-        lote = (producto.itemId ?? '').trim();
+        lote = (producto.loteSeguro ?? '').trim();
+        if (lote.isEmpty) {
+          lote = '0000';
+        }
       }
 
-      if (lote.isEmpty) {
-        _showErrorMessage(
-            'El producto no tiene un código válido para procesar');
+      if (userCode.isEmpty) {
+        _showErrorMessage('No se encontró código de usuario válido');
         return;
       }
 
@@ -994,7 +1061,7 @@ class SPCargaCamionDetalleController extends GetxController {
       );
 
       if (response.isSuccess) {
-        // ✅ ÉXITO - Mostrar mensaje de éxito
+        // ✅ ÉXITO
         String mensaje = esResta
             ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
             : 'Agregado exitosamente: $cajas cajas, $unidades unidades';
@@ -1002,7 +1069,7 @@ class SPCargaCamionDetalleController extends GetxController {
 
         await loadDespachoDetalle();
       } else {
-        // ❌ ERROR - La API nos dice qué está mal
+        // ❌ ERROR
         String mensajeError = response.message.isNotEmpty
             ? response.message
             : 'Error al procesar producto';
@@ -1028,17 +1095,9 @@ class SPCargaCamionDetalleController extends GetxController {
       final cajas = int.tryParse(cajasController.text) ?? 0;
       final unidades = int.tryParse(unidadesController.text) ?? 0;
 
-      // Validación básica local
-      if (cajas <= 0 && unidades <= 0) {
-        Get.snackbar(
-          '⚠️ Atención',
-          'Debe ingresar al menos una caja o unidad',
-          backgroundColor: spWarning500,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: const Duration(seconds: 2),
-        );
-        return;
+      // ✅ VALIDACIÓN MEJORADA CON VALIDACIONES ESPECÍFICAS
+      if (!validarOperacion(producto, cajas, unidades, esResta)) {
+        return; // No cerrar modal si hay error de validación
       }
 
       // Marcar como procesando
@@ -1052,7 +1111,7 @@ class SPCargaCamionDetalleController extends GetxController {
       // Esperar a que el modal se cierre completamente
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // Procesar producto
+      // Procesar producto con validaciones
       await procesarProductoConTipo(producto,
           cajas: cajas, unidades: unidades, esResta: esResta);
     }
@@ -1097,11 +1156,13 @@ class SPCargaCamionDetalleController extends GetxController {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header compacto
+              // Header compacto con indicador de operación
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: spColorPrimary.withAlpha(26),
+                  color: esResta
+                      ? spColorError500.withAlpha(26)
+                      : spColorPrimary.withAlpha(26),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16),
                     topRight: Radius.circular(16),
@@ -1112,43 +1173,30 @@ class SPCargaCamionDetalleController extends GetxController {
                     Row(
                       children: [
                         Container(
-                          width: 6,
-                          height: 6,
+                          width: 8,
+                          height: 8,
                           decoration: BoxDecoration(
-                            color: getProductStatusColor(producto),
+                            color: esResta ? spColorError500 : spColorPrimary,
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            producto.nombreSeguro,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        Icon(
+                          esResta ? Icons.remove_circle : Icons.add_circle,
+                          color: esResta ? spColorError500 : spColorPrimary,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          esResta ? 'RESTAR DE CARGADO' : 'AGREGAR A CAMION',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: esResta ? spColorError500 : spColorPrimary,
+                            letterSpacing: 0.5,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color:
-                                getProductStatusColor(producto).withAlpha(52),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${producto.unidadesValidadas ?? 0} Uds cargadas',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: getProductStatusColor(producto),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
+                        Spacer(),
                         IconButton(
                           onPressed: cerrarModal,
                           icon: const Icon(Icons.close, size: 20),
@@ -1160,8 +1208,26 @@ class SPCargaCamionDetalleController extends GetxController {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
 
-                    // Item ID más visible
+                    // Nombre del producto
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            producto.nombreSeguro,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Item ID y Lote más visible
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -1216,22 +1282,86 @@ class SPCargaCamionDetalleController extends GetxController {
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: esResta
+                            ? spColorError500.withOpacity(0.1)
+                            : spColorPrimary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: esResta
+                                ? spColorError500.withOpacity(0.3)
+                                : spColorPrimary.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                esResta ? Icons.warning : Icons.info,
+                                color:
+                                    esResta ? spColorError500 : spColorPrimary,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                esResta
+                                    ? 'Restando del carggado'
+                                    : 'Agregando al camión',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: esResta
+                                      ? spColorError500
+                                      : spColorPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            esResta
+                                ? 'Cargado disponible: ${producto.unidadesValidadas ?? 0} unidades'
+                                : 'Agregando al camión',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: spColorGrey600,
+                            ),
+                          ),
+                          if (esResta &&
+                              (producto.unidadesValidadas ?? 0) <= 0) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '❌ No hay productocargado disponible para restar',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: spColorError500,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
                     // Fecha de vencimiento (más compacta)
                     if (producto.tieneVencimientoValido)
                       Container(
                         width: double.infinity,
-                        padding:
-                            const EdgeInsets.all(8), // ✅ REDUCIDO de 10 a 8
-                        margin: const EdgeInsets.only(
-                            bottom: 8), // ✅ REDUCIDO de 12 a 8
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           color: producto.estaVencido
                               ? spColorError500.withOpacity(0.1)
                               : producto.tieneVencimientoProximo
                                   ? spWarning500.withOpacity(0.1)
                                   : spColorSuccess500.withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(6), // ✅ REDUCIDO de 8 a 6
+                          borderRadius: BorderRadius.circular(6),
                           border: Border.all(
                             color: producto.estaVencido
                                 ? spColorError500.withOpacity(0.3)
@@ -1253,17 +1383,17 @@ class SPCargaCamionDetalleController extends GetxController {
                                   : producto.tieneVencimientoProximo
                                       ? spWarning500
                                       : spColorSuccess500,
-                              size: 16, // ✅ REDUCIDO de 18 a 16
+                              size: 16,
                             ),
-                            const SizedBox(width: 6), // ✅ REDUCIDO de 8 a 6
+                            const SizedBox(width: 6),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Vencimiento', // ✅ TEXTO MÁS CORTO
+                                    'Vencimiento',
                                     style: TextStyle(
-                                      fontSize: 10, // ✅ REDUCIDO de 11 a 10
+                                      fontSize: 10,
                                       fontWeight: FontWeight.w500,
                                       color: Get.isDarkMode
                                           ? spColorGrey400
@@ -1273,7 +1403,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                   Text(
                                     producto.vencimientoSeguro,
                                     style: TextStyle(
-                                      fontSize: 12, // ✅ REDUCIDO de 14 a 12
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: producto.estaVencido
                                           ? spColorError500
@@ -1292,18 +1422,19 @@ class SPCargaCamionDetalleController extends GetxController {
                     // Información de totales y pendientes (más compacta)
                     Row(
                       children: [
-                        // Pendientes (MÁS DESTACADO pero más compacto)
                         Expanded(
                           flex: 2,
                           child: Container(
-                            padding:
-                                const EdgeInsets.all(8), // ✅ REDUCIDO de 12 a 8
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: spWarning500.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(
-                                  6), // ✅ REDUCIDO de 8 a 6
+                              color: (producto.unidadesValidadas ?? 0) > 0
+                                  ? spColorSuccess500.withOpacity(0.15)
+                                  : spColorGrey400.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color: spWarning500.withOpacity(0.4),
+                                  color: (producto.unidadesValidadas ?? 0) > 0
+                                      ? spColorSuccess500.withOpacity(0.4)
+                                      : spColorGrey400.withOpacity(0.4),
                                   width: 2),
                             ),
                             child: Column(
@@ -1312,40 +1443,46 @@ class SPCargaCamionDetalleController extends GetxController {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons.pending_actions,
-                                      size: 14, // ✅ REDUCIDO de 16 a 14
-                                      color: spWarning500,
+                                      Icons.inventory,
+                                      size: 14,
+                                      color:
+                                          (producto.unidadesValidadas ?? 0) > 0
+                                              ? spColorSuccess500
+                                              : spColorGrey400,
                                     ),
-                                    const SizedBox(
-                                        width: 3), // ✅ REDUCIDO de 4 a 3
+                                    const SizedBox(width: 3),
                                     Text(
-                                      'CARGADO',
+                                      'CARGADO ACTUAL',
                                       style: TextStyle(
-                                        fontSize: 10, // ✅ REDUCIDO de 11 a 10
+                                        fontSize: 10,
                                         fontWeight: FontWeight.w700,
-                                        color: spWarning500,
-                                        letterSpacing:
-                                            0.3, // ✅ REDUCIDO de 0.5 a 0.3
+                                        color: (producto.totalProcesadas) > 0
+                                            ? spColorSuccess500
+                                            : spColorGrey400,
+                                        letterSpacing: 0.3,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(
-                                    height: 2), // ✅ REDUCIDO de 4 a 2
+                                const SizedBox(height: 2),
                                 Text(
-                                  '${producto.totalProcesadas.toStringAsFixed(3)}',
+                                  '${producto.totalProcesadas ?? 0}',
                                   style: TextStyle(
-                                    fontSize: 16, // ✅ REDUCIDO de 18 a 16
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w900,
-                                    color: spWarning500,
+                                    color: (producto.unidadesValidadas ?? 0) > 0
+                                        ? spColorSuccess500
+                                        : spColorGrey400,
                                   ),
                                 ),
                                 Text(
-                                  '${producto.unidadesValidadas} Unidades | ${producto.cajasValidadas} cajas',
+                                  'C.0U',
                                   style: TextStyle(
-                                    fontSize: 10, // ✅ REDUCIDO de 11 a 10
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: spWarning500,
+                                    color: (producto.unidadesValidadas ?? 0) > 0
+                                        ? spColorSuccess500
+                                        : spColorGrey400,
                                   ),
                                 ),
                               ],
@@ -1355,7 +1492,7 @@ class SPCargaCamionDetalleController extends GetxController {
                       ],
                     ),
 
-                    const SizedBox(height: 12), // ✅ REDUCIDO de 16 a 12
+                    const SizedBox(height: 12),
 
                     // Formulario de entrada
                     Row(
@@ -1510,13 +1647,14 @@ class SPCargaCamionDetalleController extends GetxController {
 
                         const SizedBox(width: 8),
 
-                        // Botón Procesar
+                        // Botón Procesar con colores específicos
                         Expanded(
                           flex: 2,
                           child: ElevatedButton(
                             onPressed: procesarYCerrarModal,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: spColorPrimary,
+                              backgroundColor:
+                                  esResta ? spColorError500 : spColorPrimary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -1524,7 +1662,7 @@ class SPCargaCamionDetalleController extends GetxController {
                               ),
                             ),
                             child: Text(
-                              esResta ? 'Restar (ENT)' : 'Procesar (ENT)',
+                              esResta ? 'Restar (ENT)' : 'Agregar (ENT)',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,

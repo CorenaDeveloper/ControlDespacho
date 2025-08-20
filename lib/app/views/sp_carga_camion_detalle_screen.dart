@@ -826,16 +826,22 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                     margin: const EdgeInsets.only(top: 8),
                     child: Row(
                       children: [
-                        // Botón Restar (más pequeño)
+                        // Botón Restar (solo si puede restar)
                         Expanded(
                           flex: 2,
                           child: ElevatedButton.icon(
-                            onPressed: () {
-                              controller.openProcessModal(context, producto,
-                                  esResta: true);
-                            },
+                            // ✅ VALIDACIÓN: Solo habilitar si puede restar
+                            onPressed: controller.puedeRestar(producto)
+                                ? () {
+                                    controller.openProcessModal(
+                                        context, producto,
+                                        esResta: true);
+                                  }
+                                : null, // Botón deshabilitado si no puede restar
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: spColorError500,
+                              backgroundColor: controller.puedeRestar(producto)
+                                  ? spColorError500
+                                  : spColorGrey400, // Color gris si está deshabilitado
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               shape: RoundedRectangleBorder(
@@ -844,7 +850,9 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                             ),
                             icon: Icon(Icons.remove, size: 14),
                             label: Text(
-                              'Restar',
+                              controller.puedeRestar(producto)
+                                  ? 'Restar'
+                                  : 'Sin Stock', // Texto diferente si no puede restar
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -855,7 +863,7 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
 
                         const SizedBox(width: 8),
 
-                        // Botón Agregar (más largo)
+                        // Botón Agregar (siempre habilitado)
                         Expanded(
                           flex: 3,
                           child: ElevatedButton.icon(
