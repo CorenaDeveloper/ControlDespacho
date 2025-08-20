@@ -470,7 +470,7 @@ class SPProductoDetalle {
 
   double get totalProcesadas {
     if (factor == null || factor! <= 0) return 0.0;
-    final procesadas = unidadesProcesadas;
+    final procesadas = unidadesValidadas;
     final cajasEnteras = (procesadas! / factor!).floor();
     final unidadesSueltas = procesadas - (cajasEnteras * factor!);
     final unidadesFormateadas = unidadesSueltas / 1000.0;

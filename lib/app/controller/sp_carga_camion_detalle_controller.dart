@@ -670,9 +670,9 @@ class SPCargaCamionDetalleController extends GetxController {
     }
   }
 
-  /// Verificar si un producto puede ser procesado
   bool puedeSerProcesado(SPProductoDetalle producto) {
-    return !producto.validadoFisicamente;
+    return (producto.unidadesProcesadas ?? 0) > 0 &&
+        !producto.estaValidadoFisicamente;
   }
 
   /// Buscar producto por código de barras
