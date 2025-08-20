@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sabipay/app/controller/sp_carga_camion_detalle_controller.dart';
-import 'package:sabipay/app/model/sp_despacho_detalle.dart';
+import 'package:sabipay/app/model/sp_carga_camion_detalle.dart';
 import 'package:sabipay/constant/sp_colors.dart';
 import 'package:sabipay/sabipy_theme/sp_wallet_theme.dart';
 import 'package:sabipay/sabipy_theme/theme_controller.dart';
@@ -297,7 +297,7 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                     ),
                   ),
                   Text(
-                    '${controller.progresoGeneral.toStringAsFixed(1)}%',
+                    '${controller.progresoValidacion.toStringAsFixed(1)}%',
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -306,27 +306,21 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
               Row(
                 children: [
                   _buildCompactStat(
-                    controller.productosCompletados.toString(),
-                    'Completados',
+                    controller.productosValidados.toString(),
+                    'Validados',
                     spColorSuccess500,
                   ),
                   const Spacer(),
                   _buildCompactStat(
-                    controller.productosPendientes.toString(),
-                    'Pendientes',
+                    controller.productosNoValidados.toString(),
+                    'No Validados',
                     spWarning500,
-                  ),
-                  const Spacer(),
-                  _buildCompactStat(
-                    controller.productosEnProceso.toString(),
-                    'En Proceso',
-                    spColorTeal600,
                   ),
                 ],
               ),
               4.height,
               LinearProgressIndicator(
-                value: controller.progresoGeneral / 100,
+                value: controller.progresoValidacion / 100,
                 backgroundColor: themeController.isDarkMode
                     ? spColorGrey700
                     : spColorGrey200,
@@ -741,8 +735,7 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: controller
-                            .getProductStatusColor(producto.estadoProducto),
+                        color: controller.getProductStatusColor(producto),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -810,15 +803,14 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: controller
-                                .getProductStatusColor(producto.estadoProducto)
+                                .getProductStatusColor(producto)
                                 .withAlpha(26),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             producto.estadoDescripcion,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: controller.getProductStatusColor(
-                                  producto.estadoProducto),
+                              color: controller.getProductStatusColor(producto),
                               fontWeight: FontWeight.w500,
                               fontSize: 10,
                             ),
@@ -842,7 +834,7 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                       ? spColorGrey700
                       : spColorGrey200,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    controller.getProductStatusColor(producto.estadoProducto),
+                    controller.getProductStatusColor(producto),
                   ),
                 ),
                 8.height,

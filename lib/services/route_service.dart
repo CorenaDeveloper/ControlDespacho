@@ -350,6 +350,44 @@ class RouteService extends GetxService {
     }
   }
 
+  Future<ApiResponse<Map<String, dynamic>>> procesarEscaneoProductoValidacion({
+    required int idSesion,
+    required String itemId,
+    required String lote,
+    required String usuarioValidacion,
+    required int cantidadCargada,
+    String? observaciones,
+  }) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        'DS_PORTAL_DTRACK_Hoja_Despacho_SV/ProcesarEscaneoProductoVidacion',
+        body: {
+          'idSesion': idSesion,
+          'itemId': itemId,
+          'lote': lote,
+          'cantidadCargada': cantidadCargada,
+          'usuarioValidacion': usuarioValidacion,
+          if (observaciones != null && observaciones.isNotEmpty)
+            'observaciones': observaciones,
+        },
+        useAuthHeaders: true,
+      );
+      if (response.isSuccess) {
+        return response;
+      } else {
+        print('❌ Error al procesar escaneo: ${response.message}');
+        return response;
+      }
+    } catch (e) {
+      print('❌ Error inesperado al procesar escaneo: $e');
+      return ApiResponse.error(
+        message: 'Error inesperado al procesar escaneo: $e',
+        details: 'Error',
+        statusCode: -1,
+      );
+    }
+  }
+
   /// Marcar producto con problema
   Future<ApiResponse<Map<String, dynamic>>> marcarProblema({
     required int idDetalle,

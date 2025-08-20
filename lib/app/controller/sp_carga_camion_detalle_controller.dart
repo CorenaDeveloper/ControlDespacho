@@ -1,15 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:sabipay/app/controller/sp_cards_controller.dart';
 import 'package:sabipay/app/model/sp_carga_camion_detalle.dart';
-import 'package:sabipay/app/model/sp_carga_camion.dart';
-import 'package:sabipay/app/model/sp_despacho_detalle.dart';
-import 'package:sabipay/route/my_route.dart';
 import 'package:sabipay/services/route_service.dart';
 import 'package:sabipay/constant/sp_colors.dart';
-import 'package:intl/intl.dart';
 import 'package:sabipay/services/api_despacho.dart';
+import 'package:get_storage/get_storage.dart';
 
 class SPCargaCamionDetalleController extends GetxController {
   final RouteService _routeService = RouteService.instance;
@@ -19,49 +16,51 @@ class SPCargaCamionDetalleController extends GetxController {
   final isProcessing = false.obs;
   // Estado de carga
   final isLoading = false.obs;
+  final box = GetStorage();
 
   final RxBool isModalOpen = false.obs;
   final RxBool isProcessingModal = false.obs;
   final RxBool isFinalizingModalOpen = false.obs;
-
   // Datos principales
-  final despacho = Rxn<DetalleResponseRuta>();
-  final productos = <ProductoDetalleRuta>[].obs;
-  final filteredProductos = <ProductoDetalleRuta>[].obs;
+  final despacho = Rxn<SPDespachoDetalle>();
+  final productos = <SPProductoDetalle>[].obs;
+  final filteredProductos = <SPProductoDetalle>[].obs;
+  String get userCode {
+    return box.read('user_code') ?? '';
+  }
 
   // Filtros y búsqueda
   final selectedFilterIndex = 1.obs;
   final searchQuery = ''.obs;
+
   final List<String> filterOptions = [
     'Todos',
-    'Pendientes',
-    'En Proceso',
-    'Completados'
+    'No Validados',
+    'Validados',
   ];
 
   // Estadísticas básicas
-  final productosCompletados = 0.obs;
-  final productosPendientes = 0.obs;
-  final productosEnProceso = 0.obs;
-  final progresoGeneral = 0.0.obs;
+  final productosValidados = 0.obs; // Antes: productosCompletados
+  final productosNoValidados = 0.obs; // Antes: productosPendientes
+  final progresoValidacion = 0.0.obs; // Antes: progresoGeneral
 
   void _updateStatistics() {
     if (productos.isEmpty) {
-      productosCompletados.value = 0;
-      productosPendientes.value = 0;
-      productosEnProceso.value = 0;
-      progresoGeneral.value = 0.0;
+      productosValidados.value = 0;
+      productosNoValidados.value = 0;
+      progresoValidacion.value = 0.0;
       return;
     }
 
-    productosCompletados.value =
-        productos.where((p) => p.estaCompletado).length;
-    productosPendientes.value = productos.where((p) => p.estaPendiente).length;
-    productosEnProceso.value = productos.where((p) => p.estaEnProceso).length;
+    // ✅ CONTAR POR VALIDACIÓN FÍSICA EN LUGAR DE ESTADO
+    productosValidados.value =
+        productos.where((p) => p.estaValidadoFisicamente).length;
+    productosNoValidados.value =
+        productos.where((p) => !p.estaValidadoFisicamente).length;
 
     final total = productos.length;
-    progresoGeneral.value =
-        total > 0 ? (productosCompletados.value / total) * 100 : 0.0;
+    progresoValidacion.value =
+        total > 0 ? (productosValidados.value / total) * 100 : 0.0;
   }
 
   @override
@@ -178,12 +177,11 @@ class SPCargaCamionDetalleController extends GetxController {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: getProductStatusColor(producto.estadoProducto)
-                            .withOpacity(0.1),
+                        color: getProductStatusColor(producto).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: getProductStatusColor(producto.estadoProducto)
-                              .withOpacity(0.3),
+                          color:
+                              getProductStatusColor(producto).withOpacity(0.3),
                         ),
                       ),
                       child: Column(
@@ -205,8 +203,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 4, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: getProductStatusColor(
-                                          producto.estadoProducto)
+                                  color: getProductStatusColor(producto)
                                       .withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -214,8 +211,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                   producto.estadoDescripcion,
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: getProductStatusColor(
-                                        producto.estadoProducto),
+                                    color: getProductStatusColor(producto),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -675,12 +671,12 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
   /// Verificar si un producto puede ser procesado
-  bool puedeSerProcesado(ProductoDetalleRuta producto) {
-    return !producto.estaCompletado;
+  bool puedeSerProcesado(SPProductoDetalle producto) {
+    return !producto.validadoFisicamente;
   }
 
   /// Buscar producto por código de barras
-  ProductoDetalleRuta? _findProductByBarcode(String barcode) {
+  SPProductoDetalle? _findProductByBarcode(String barcode) {
     if (productos.isEmpty || barcode.isEmpty) return null;
 
     // Normalizar el código escaneado
@@ -778,16 +774,14 @@ class SPCargaCamionDetalleController extends GetxController {
     }
 
     var filtered = List<SPProductoDetalle>.from(productos);
-    // Aplicar filtro por estado
+
+    // ✅ APLICAR FILTRO POR VALIDACIÓN FÍSICA EN LUGAR DE ESTADO
     switch (selectedFilterIndex.value) {
-      case 1: // Pendientes
-        filtered = filtered.where((p) => p.estaPendiente).toList();
+      case 1: // No Validados
+        filtered = filtered.where((p) => !p.estaValidadoFisicamente).toList();
         break;
-      case 2: // En Proceso
-        filtered = filtered.where((p) => p.estaEnProceso).toList();
-        break;
-      case 3: // Completados
-        filtered = filtered.where((p) => p.estaCompletado).toList();
+      case 2: // Validados
+        filtered = filtered.where((p) => p.estaValidadoFisicamente).toList();
         break;
       default: // Todos (caso 0)
         // No filtramos, mostramos todos
@@ -819,7 +813,15 @@ class SPCargaCamionDetalleController extends GetxController {
     );
 
     filteredProductos.value = filtered;
-    update(); // Forzar actualización de la UI
+    update();
+  }
+
+  bool puedeSerValidado(SPProductoDetalle producto) {
+    // Solo se puede validar si:
+    // 1. Tiene unidades procesadas (ya fue procesado)
+    // 2. No está completamente validado aún
+    return (producto.unidadesProcesadas ?? 0) > 0 &&
+        !producto.validacionCompleta;
   }
 
   /// Refrescar datos
@@ -829,18 +831,35 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
   /// Obtener color del estado del producto
-  Color getProductStatusColor(String? estado) {
-    switch (estado?.toUpperCase()) {
-      case 'COMPLETO':
-      case 'COMPLETADO':
-        return spColorSuccess500;
-      case 'EN_PROCESO':
-      case 'PROCESANDO':
-        return spColorTeal600;
-      case 'PENDIENTE':
-        return spWarning500;
-      default:
-        return spColorGrey400;
+  Color getProductStatusColor(SPProductoDetalle producto) {
+    if (producto.estaValidadoFisicamente) {
+      if (producto.validacionCompleta) {
+        return spColorSuccess500; // Verde: Completamente validado
+      } else {
+        return spColorTeal600; // Azul: Validado parcialmente
+      }
+    } else {
+      if ((producto.unidadesProcesadas ?? 0) > 0) {
+        return spWarning500; // Amarillo: Procesado pero no validado
+      } else {
+        return spColorGrey400; // Gris: No procesado ni validado
+      }
+    }
+  }
+
+  String getValidationStatusText(SPProductoDetalle producto) {
+    if (producto.estaValidadoFisicamente) {
+      if (producto.validacionCompleta) {
+        return 'Validado Completo';
+      } else {
+        return 'Validado Parcial';
+      }
+    } else {
+      if ((producto.unidadesProcesadas ?? 0) > 0) {
+        return 'Pendiente Validación';
+      } else {
+        return 'No Procesado';
+      }
     }
   }
 
@@ -1016,8 +1035,7 @@ class SPCargaCamionDetalleController extends GetxController {
                           width: 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color:
-                                getProductStatusColor(producto.estadoProducto),
+                            color: getProductStatusColor(producto),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1038,8 +1056,7 @@ class SPCargaCamionDetalleController extends GetxController {
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color:
-                                getProductStatusColor(producto.estadoProducto)
-                                    .withAlpha(52),
+                                getProductStatusColor(producto).withAlpha(52),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -1047,8 +1064,7 @@ class SPCargaCamionDetalleController extends GetxController {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: getProductStatusColor(
-                                  producto.estadoProducto),
+                              color: getProductStatusColor(producto),
                             ),
                           ),
                         ),
@@ -1237,7 +1253,7 @@ class SPCargaCamionDetalleController extends GetxController {
                                 const SizedBox(
                                     height: 2), // ✅ REDUCIDO de 4 a 2
                                 Text(
-                                  '${producto.toStringAsFixed(3)}',
+                                  '${producto.totalProcesadas.toStringAsFixed(3)}',
                                   style: TextStyle(
                                     fontSize: 16, // ✅ REDUCIDO de 18 a 16
                                     fontWeight: FontWeight.w900,
@@ -1497,11 +1513,12 @@ class SPCargaCamionDetalleController extends GetxController {
         return;
       }
       // Llamar a la API - ella se encarga de todas las validaciones
-      final response = await _routeService.procesarEscaneoProducto(
+      final response = await _routeService.procesarEscaneoProductoValidacion(
         idSesion: despacho.value!.id!,
         itemId: itemId,
         lote: lote,
         cantidadCargada: cantidadTotal,
+        usuarioValidacion: userCode,
         observaciones: 'Procesado: $cajas cajas, $unidades unidades',
       );
 
