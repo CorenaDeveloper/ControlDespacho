@@ -977,8 +977,6 @@ class SPCargaCamionDetalleController extends GetxController {
     });
   }
 
-// SIMPLIFICADO - Solo modifica el método procesarProductoConTipo:
-
   Future<void> procesarProductoConTipo(SPProductoDetalle producto,
       {int cajas = 0, int unidades = 0, bool esResta = false}) async {
     try {
@@ -1081,6 +1079,71 @@ class SPCargaCamionDetalleController extends GetxController {
     }
   }
 
+  Future<void> procesarProductoConTipoFinalizado(
+      SPProductoDetalle producto) async {
+    try {
+      if (despacho.value?.id == null) {
+        _showErrorMessage('No se encontró ID de sesión válido');
+        return;
+      }
+
+      _showInfoMessage('producto...');
+
+      String? itemId = (producto.itemId ?? '').trim();
+      if (itemId.isEmpty) {
+        itemId = (producto.codigoSeguro).trim();
+        if (itemId.isEmpty) {
+          itemId = (producto.itemSeguro).trim();
+        }
+      }
+
+      if (itemId.isEmpty) {
+        _showErrorMessage(
+            'El producto no tiene un código válido para procesar');
+        return;
+      }
+
+      String? lote = (producto.lote ?? '').trim();
+      if (lote.isEmpty) {
+        lote = (producto.loteSeguro).trim();
+        if (lote.isEmpty) {
+          lote = '0000';
+        }
+      }
+
+      if (userCode.isEmpty) {
+        _showErrorMessage('No se encontró código de usuario válido');
+        return;
+      }
+
+      // Llamar a la API con cantidad positiva o negativa
+      final response = await _routeService.ProcesarProductoValidacionFinalizar(
+        idSesion: despacho.value!.id!,
+        itemId: itemId,
+        lote: lote,
+        usuarioValidacion: userCode,
+        observaciones: 'Finalizado',
+      );
+
+      if (response.isSuccess) {
+        //  ÉXITO
+        String mensaje = 'Finalizado correctamente';
+        _showSuccessMessage(mensaje);
+
+        await loadDespachoDetalle();
+      } else {
+        // ❌ ERROR
+        String mensajeError = response.message.isNotEmpty
+            ? response.message
+            : 'Error al finalizar';
+        _showErrorMessage(mensajeError);
+      }
+    } catch (e) {
+      print('❌ Error inesperado procesando producto: $e');
+      _showErrorMessage('Error inesperado: ${e.toString()}');
+    }
+  }
+
   /// Modal para visualizar los datos del producto escaneado
   Widget _buildProcessModal(BuildContext context, SPProductoDetalle producto,
       {bool esResta = false}) {
@@ -1114,6 +1177,26 @@ class SPCargaCamionDetalleController extends GetxController {
       // Procesar producto con validaciones
       await procesarProductoConTipo(producto,
           cajas: cajas, unidades: unidades, esResta: esResta);
+    }
+
+// Función mejorada para procesar y cerrar modal
+    void procesarFinalizadoYCerrarModal() async {
+      // Evitar múltiples ejecuciones
+      if (isProcessingModal.value) return;
+
+      // Marcar como procesando
+      isProcessingModal.value = true;
+
+      // Cerrar modal ANTES de procesar
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      // Esperar a que el modal se cierre completamente
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // Procesar producto con validaciones
+      await procesarProductoConTipoFinalizado(producto);
     }
 
     // Función para cerrar modal sin procesar
@@ -1282,64 +1365,6 @@ class SPCargaCamionDetalleController extends GetxController {
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: esResta
-                            ? spColorError500.withOpacity(0.1)
-                            : spColorPrimary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: esResta
-                                ? spColorError500.withOpacity(0.3)
-                                : spColorPrimary.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                esResta ? Icons.warning : Icons.info,
-                                color:
-                                    esResta ? spColorError500 : spColorPrimary,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                esResta
-                                    ? 'Restando del cargado'
-                                    : 'Agregando al camión',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: esResta
-                                      ? spColorError500
-                                      : spColorPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          // ❌ REMOVIDO: Botón mal ubicado aquí
-                          if (esResta &&
-                              (producto.unidadesValidadas ?? 0) <= 0) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              '❌ No hay producto cargado disponible para restar',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: spColorError500,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
                     // Fecha de vencimiento (más compacta)
                     if (producto.tieneVencimientoValido)
                       Container(
@@ -1604,7 +1629,7 @@ class SPCargaCamionDetalleController extends GetxController {
                       width: double.infinity,
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ElevatedButton(
-                        onPressed: procesarYCerrarModal,
+                        onPressed: procesarFinalizadoYCerrarModal,
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
                               esResta ? spColorError500 : spColorPrimary,
@@ -1618,13 +1643,6 @@ class SPCargaCamionDetalleController extends GetxController {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              esResta
-                                  ? Icons.remove_circle_outline
-                                  : Icons.add_circle_outline,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
                             Text(
                               'Finalizar Carga de Producto',
                               style: TextStyle(
@@ -1709,7 +1727,7 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
   /// Método para procesar producto
-  Future<void> procesarProducto(SPProductoDetalle producto,
+  /*Future<void> procesarProducto(SPProductoDetalle producto,
       {int cajas = 0, int unidades = 0}) async {
     try {
       if (despacho.value?.id == null) {
@@ -1776,6 +1794,7 @@ class SPCargaCamionDetalleController extends GetxController {
       _showErrorMessage('Error inesperado: ${e.toString()}');
     }
   }
+*/
 
   /// Limpiar datos al cerrar
   @override
