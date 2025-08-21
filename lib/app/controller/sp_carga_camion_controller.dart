@@ -48,12 +48,7 @@ class SPCargaCamionController extends GetxController {
 
         cargasList.value = cargas;
         _applyFilters();
-
-        if (cargasList.isEmpty) {
-          _showInfoMessage('No se encontraron cargas pendientes para camión');
-        }
       } else {
-        _showErrorMessage(response.message);
         cargasList.clear();
         filteredCargasList.clear();
       }
@@ -316,18 +311,6 @@ class SPCargaCamionController extends GetxController {
       'Error',
       message,
       backgroundColor: spColorError500,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.TOP,
-      duration: const Duration(seconds: 3),
-    );
-  }
-
-  /// Mostrar mensaje de información
-  void _showInfoMessage(String message) {
-    Get.snackbar(
-      'Información',
-      message,
-      backgroundColor: spColorTeal600,
       colorText: Colors.white,
       snackPosition: SnackPosition.TOP,
       duration: const Duration(seconds: 3),

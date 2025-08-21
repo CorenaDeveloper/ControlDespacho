@@ -173,166 +173,7 @@ class SPCargaCamionDetalleController extends GetxController {
       _showErrorMessage('No se encontró información del despacho');
       return;
     }
-
-    final pendientes = productos.where((p) => p.estaPendiente).toList();
-    final enProceso = productos.where((p) => p.estaEnProceso).toList();
-    final productosIncompletos = [...pendientes, ...enProceso];
-
-    if (productosIncompletos.isNotEmpty) {
-      // Mostrar modal de confirmación con detalles de productos pendientes
-      _showPendingProductsModal(productosIncompletos);
-    } else {
-      // No hay productos pendientes, proceder directamente
-      _showFinalizeConfirmationModal();
-    }
-  }
-
-  /// Modal para mostrar productos pendientes
-  void _showPendingProductsModal(List<SPProductoDetalle> productosIncompletos) {
-    isFinalizingModalOpen.value = true;
-    showDialog(
-      context: Get.context!,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: spWarning500, size: 24),
-            const SizedBox(width: 8),
-            const Text('Pendientes'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hay ${productosIncompletos.length} productos que no han sido completados:',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: productosIncompletos.map((producto) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: getProductStatusColor(producto).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color:
-                              getProductStatusColor(producto).withOpacity(0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            producto.nombreSeguro,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 4, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: getProductStatusColor(producto)
-                                      .withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  producto.estadoDescripcion,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: getProductStatusColor(producto),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                '${producto.unidadesProcesadas ?? 0}/${producto.unidadesRuta ?? 0}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: spColorTeal600.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: spColorTeal600.withOpacity(0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.info_outline, size: 16, color: spColorTeal600),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Especificar el motivo:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Para finalizar con productos pendientes, es obligatorio agregar un comentario explicando el motivo.',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: Get.isDarkMode ? Colors.white : spColorGrey700,
-            ), // ← Color adaptativo para modo claro/oscuro
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              showFinalizeWithCommentModal(productosIncompletos);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: spWarning500,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Continuar'),
-          ),
-        ],
-      ),
-    ).then((_) {
-      isFinalizingModalOpen.value = false;
-    });
+    _showFinalizeConfirmationModal();
   }
 
   void showFinalizeWithCommentModal(
@@ -368,7 +209,7 @@ class SPCargaCamionDetalleController extends GetxController {
         await Future.delayed(const Duration(milliseconds: 300));
 
         // Finalizar despacho
-        _finalizarDespacho(comentarioController.text.trim());
+        _finalizarDespacho();
       }
     }
 
@@ -620,8 +461,6 @@ class SPCargaCamionDetalleController extends GetxController {
 
   /// Modal de confirmación simple para despachos sin pendientes
   void _showFinalizeConfirmationModal() {
-    final TextEditingController comentarioController = TextEditingController();
-
     // 🎯 Marcar que el modal de finalizar está abierto
     isFinalizingModalOpen.value = true;
 
@@ -638,22 +477,6 @@ class SPCargaCamionDetalleController extends GetxController {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 2),
-            const Text(
-              'Comentario opcional:',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 2),
-            TextField(
-              controller: comentarioController,
-              decoration: const InputDecoration(
-                hintText: 'Agrega un comentario si lo deseas...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
-          ],
         ),
         actions: [
           TextButton(
@@ -663,7 +486,7 @@ class SPCargaCamionDetalleController extends GetxController {
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _finalizarDespacho(comentarioController.text.trim());
+              _finalizarDespacho();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: spColorSuccess500,
@@ -680,7 +503,7 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
   /// Método para finalizar despacho usando la API correcta
-  Future<void> _finalizarDespacho(String comentario) async {
+  Future<void> _finalizarDespacho() async {
     if (despacho.value?.id == null) {
       _showErrorMessage('No se encontró sesión válida para finalizar');
       return;
@@ -688,21 +511,24 @@ class SPCargaCamionDetalleController extends GetxController {
 
     try {
       isProcessing.value = true;
-      _showInfoMessage('Finalizando despacho...');
-
+      Get.offNamed('/sp_carga_camion_screen');
+      if (userCode.isEmpty) {
+        _showErrorMessage('No se encontró código de usuario válido');
+        return;
+      }
       // Usar la API correcta de DespachoService
-      final response = await _despachoService.finalizarSesion(
+      final response = await _despachoService.finalizarCargaCamion(
         idSesion: despacho.value!.id!,
-        observacionesGenerales: comentario.isNotEmpty ? comentario : null,
+        codeUser: userCode,
       );
 
       if (response.isSuccess) {
-        _showSuccessMessage('Despacho finalizado exitosamente');
+        _showSuccessMessage('Carga finalizada exitosamente');
         // pendiente proceder
       } else {
         _showErrorMessage(response.message.isNotEmpty
             ? response.message
-            : 'Error al finalizar despacho');
+            : 'Error al finalizar cCArga');
       }
     } catch (e) {
       print('❌ Error al finalizar despacho: $e');
@@ -776,7 +602,6 @@ class SPCargaCamionDetalleController extends GetxController {
             } else {
               productos.clear();
               filteredProductos.clear();
-              _showInfoMessage('No se encontraron productos en este despacho');
             }
           } else {
             _showErrorMessage(despachoResponse.message.isNotEmpty
@@ -1006,10 +831,6 @@ class SPCargaCamionDetalleController extends GetxController {
           return;
         }
       }
-
-      // Mostrar indicador de carga
-      String accion = esResta ? 'Restando' : 'Agregando';
-      _showInfoMessage('$accion producto...');
 
       // Preparar datos para la API
       final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
@@ -1725,76 +1546,6 @@ class SPCargaCamionDetalleController extends GetxController {
       ),
     );
   }
-
-  /// Método para procesar producto
-  /*Future<void> procesarProducto(SPProductoDetalle producto,
-      {int cajas = 0, int unidades = 0}) async {
-    try {
-      if (despacho.value?.id == null) {
-        _showErrorMessage('No se encontró ID de sesión válido');
-        return;
-      }
-      if (cajas <= 0 && unidades <= 0) {
-        _showWarningMessage('Debe ingresar al menos una caja o unidad');
-        return;
-      }
-      // Mostrar indicador de carga
-      _showInfoMessage('Procesando producto...');
-
-      // Preparar datos para la API
-      final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-      final cantidadTotal = cantidadCajaUnidad + unidades;
-
-      String? itemId = (producto.itemId ?? '').trim();
-      if (itemId.isEmpty) {
-        itemId = (producto.itemId ?? '').trim();
-      }
-
-      if (itemId.isEmpty) {
-        _showErrorMessage(
-            'El producto no tiene un código válido para procesar');
-        return;
-      }
-
-      String? lote = (producto.lote ?? '').trim();
-      if (lote.isEmpty) {
-        lote = (producto.itemId ?? '').trim();
-      }
-
-      if (lote.isEmpty) {
-        _showErrorMessage(
-            'El producto no tiene un código válido para procesar');
-        return;
-      }
-      // Llamar a la API - ella se encarga de todas las validaciones
-      final response = await _routeService.procesarEscaneoProductoValidacion(
-        idSesion: despacho.value!.id!,
-        itemId: itemId,
-        lote: lote,
-        cantidadCargada: cantidadTotal,
-        usuarioValidacion: userCode,
-        observaciones: 'Procesado: $cajas cajas, $unidades unidades',
-      );
-
-      if (response.isSuccess) {
-        // ✅ ÉXITO - Mostrar mensaje de éxito
-        _showSuccessMessage(
-            'Procesado exitosamente: $cajas cajas, $unidades unidades');
-
-        await loadDespachoDetalle();
-      } else {
-        // ❌ ERROR - La API nos dice qué está mal
-        String mensajeError = response.message.isNotEmpty
-            ? response.message
-            : 'Error al procesar producto';
-        _showErrorMessage(mensajeError);
-      }
-    } catch (e) {
-      print('❌ Error inesperado procesando producto: $e');
-      _showErrorMessage('Error inesperado: ${e.toString()}');
-    }
-  }
-*/
 
   /// Limpiar datos al cerrar
   @override

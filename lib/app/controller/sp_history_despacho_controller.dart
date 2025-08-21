@@ -65,7 +65,6 @@ class SPHistoryController extends GetxController {
                 'No se encontraron despachos ${filterOptions[selectedFilterIndex.value].toLowerCase()}');
           }
         } else {
-          _showErrorMessage(despachoResponse.message);
           despachosList.clear();
         }
       } else {

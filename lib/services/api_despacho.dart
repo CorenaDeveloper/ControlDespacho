@@ -113,6 +113,35 @@ class DespachoService extends GetxService {
     }
   }
 
+  /// Finalizar sesión de despacho
+  Future<ApiResponse<Map<String, dynamic>>> finalizarCargaCamion({
+    required int idSesion,
+    String? codeUser,
+  }) async {
+    try {
+      final requestBody = {'id': idSesion, 'codeUser': codeUser};
+
+      final response = await _apiService.put<Map<String, dynamic>>(
+        'DS_PORTAL_DTRACK_Hoja_Despacho_SV/FinalizarCamion/$idSesion',
+        body: requestBody,
+        useAuthHeaders: true,
+      );
+
+      if (response.isSuccess) {
+        return response;
+      } else {
+        return response;
+      }
+    } catch (e) {
+      print('❌ Error inesperado al finalizar sesión: $e');
+      return ApiResponse.error(
+        message: 'Error inesperado al finalizar sesión: $e',
+        details: 'Error',
+        statusCode: -1,
+      );
+    }
+  }
+
   /// Obtener estado de sesión
   Future<ApiResponse<Map<String, dynamic>>> obtenerEstadoSesion(
       int idSesion) async {
