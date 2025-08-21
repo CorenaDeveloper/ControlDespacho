@@ -978,6 +978,7 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
 // SIMPLIFICADO - Solo modifica el método procesarProductoConTipo:
+
   Future<void> procesarProductoConTipo(SPProductoDetalle producto,
       {int cajas = 0, int unidades = 0, bool esResta = false}) async {
     try {
@@ -995,33 +996,38 @@ class SPCargaCamionDetalleController extends GetxController {
       // ✅ VALIDACIÓN SIMPLE PARA RESTA
       if (esResta) {
         final unidadesDisponibles = producto.unidadesValidadas ?? 0;
-        final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-        final cantidadTotalARestar = cantidadCajaUnidad + unidades;
-
         if (unidadesDisponibles <= 0) {
           _showWarningMessage('No hay unidades validadas para restar');
           return;
         }
 
-        if (cantidadTotalARestar > unidadesDisponibles) {
-          _showWarningMessage(
-              'No puede restar $cantidadTotalARestar unidades.\n'
-              'Solo hay $unidadesDisponibles unidades validadas.');
+        final cantidadTotal = (producto.factor ?? 0) * cajas + unidades;
+        if (cantidadTotal > unidadesDisponibles) {
+          _showWarningMessage('No puede restar $cantidadTotal unidades.\n'
+              'Solo hay $unidadesDisponibles unidades disponibles.');
           return;
         }
       }
 
       // Mostrar indicador de carga
-      _showInfoMessage(
-          esResta ? 'Restando producto...' : 'Procesando producto...');
+      String accion = esResta ? 'Restando' : 'Agregando';
+      _showInfoMessage('$accion producto...');
 
       // Preparar datos para la API
       final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-      final cantidadTotal = cantidadCajaUnidad + unidades;
+      var cantidadTotal = cantidadCajaUnidad + unidades;
+
+      // 🔥 CLAVE: Aplicar signo negativo si es resta
+      if (esResta) {
+        cantidadTotal = -cantidadTotal;
+      }
 
       String? itemId = (producto.itemId ?? '').trim();
       if (itemId.isEmpty) {
-        itemId = (producto.itemId ?? '').trim();
+        itemId = (producto.codigoSeguro).trim();
+        if (itemId.isEmpty) {
+          itemId = (producto.itemSeguro).trim();
+        }
       }
 
       if (itemId.isEmpty) {
@@ -1032,65 +1038,38 @@ class SPCargaCamionDetalleController extends GetxController {
 
       String? lote = (producto.lote ?? '').trim();
       if (lote.isEmpty) {
-        lote = (producto.itemId ?? '').trim();
+        lote = (producto.loteSeguro).trim();
+        if (lote.isEmpty) {
+          lote = '0000';
+        }
       }
 
-      if (lote.isEmpty) {
-        _showErrorMessage(
-            'El producto no tiene un código válido para procesar');
+      if (userCode.isEmpty) {
+        _showErrorMessage('No se encontró código de usuario válido');
         return;
       }
 
-      // 🎯 PASO 1: Procesar/Agregar el producto
+      // Llamar a la API con cantidad positiva o negativa
       final response = await _routeService.procesarEscaneoProductoValidacion(
         idSesion: despacho.value!.id!,
         itemId: itemId,
         lote: lote,
-        cantidadCargada: cantidadTotal,
+        cantidadCargada: cantidadTotal, // ← Puede ser positivo o negativo
         usuarioValidacion: userCode,
-        observaciones: esResta
-            ? 'Restado: $cajas cajas, $unidades unidades'
-            : 'Procesado: $cajas cajas, $unidades unidades',
+        observaciones:
+            '${esResta ? "Restado" : "Agregado"}: $cajas cajas, $unidades unidades',
       );
 
       if (response.isSuccess) {
-        // ✅ PASO 1 EXITOSO - Mostrar mensaje de éxito inicial
-        _showSuccessMessage(esResta
+        // ✅ ÉXITO
+        String mensaje = esResta
             ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
-            : 'Procesado exitosamente: $cajas cajas, $unidades unidades');
+            : 'Agregado exitosamente: $cajas cajas, $unidades unidades';
+        _showSuccessMessage(mensaje);
 
-        // 🎯 PASO 2: Finalizar la validación automáticamente
-        _showInfoMessage('Finalizando validación...');
-
-        final finalizarResponse =
-            await _routeService.ProcesarProductoValidacionFinalizar(
-          idSesion: despacho.value!.id!,
-          itemId: itemId,
-          lote: lote,
-          usuarioValidacion: userCode,
-          observaciones: esResta
-              ? 'Validación finalizada después de restar: $cajas cajas, $unidades unidades'
-              : 'Validación finalizada después de procesar: $cajas cajas, $unidades unidades',
-        );
-
-        if (finalizarResponse.isSuccess) {
-          // ✅ PASO 2 EXITOSO - Mostrar mensaje de validación completa
-          _showSuccessMessage('✅ Validación finalizada correctamente');
-
-          // Recargar datos para reflejar cambios
-          await loadDespachoDetalle();
-        } else {
-          // ❌ PASO 2 FALLÓ - Mostrar advertencia pero el producto ya fue procesado
-          String mensajeError = finalizarResponse.message.isNotEmpty
-              ? finalizarResponse.message
-              : 'Error al finalizar validación';
-          _showWarningMessage('⚠️ Producto procesado pero: $mensajeError');
-
-          // Aún así recargar datos para mostrar el estado actual
-          await loadDespachoDetalle();
-        }
+        await loadDespachoDetalle();
       } else {
-        // ❌ PASO 1 FALLÓ - La API nos dice qué está mal
+        // ❌ ERROR
         String mensajeError = response.message.isNotEmpty
             ? response.message
             : 'Error al procesar producto';
@@ -1620,7 +1599,7 @@ class SPCargaCamionDetalleController extends GetxController {
 
                     const SizedBox(height: 16),
 
-                    // ✅ BOTÓN FINALIZAR CENTRADO
+                    // ✅ BOTÓN FINALIZAR CENTRADO (Nueva ubicación correcta)
                     Container(
                       width: double.infinity,
                       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -1727,205 +1706,6 @@ class SPCargaCamionDetalleController extends GetxController {
         ),
       ),
     );
-  }
-
-// ✅ FUNCIÓN PARA AGREGAR/RESTAR (solo primer paso)
-  Future<void> procesarProductoSinFinalizar(SPProductoDetalle producto,
-      {int cajas = 0, int unidades = 0, bool esResta = false}) async {
-    try {
-      if (despacho.value?.id == null) {
-        _showErrorMessage('No se encontró ID de sesión válido');
-        return;
-      }
-
-      // ✅ VALIDACIÓN OBLIGATORIA PARA AGREGAR/RESTAR
-      if (cajas <= 0 && unidades <= 0) {
-        _showWarningMessage('Debe ingresar al menos una caja o unidad');
-        return;
-      }
-
-      // ✅ VALIDACIÓN PARA RESTA
-      if (esResta) {
-        final unidadesDisponibles = producto.unidadesValidadas ?? 0;
-        final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-        final cantidadTotalARestar = cantidadCajaUnidad + unidades;
-
-        if (unidadesDisponibles <= 0) {
-          _showWarningMessage('No hay unidades validadas para restar');
-          return;
-        }
-
-        if (cantidadTotalARestar > unidadesDisponibles) {
-          _showWarningMessage(
-              'No puede restar $cantidadTotalARestar unidades.\n'
-              'Solo hay $unidadesDisponibles unidades validadas.');
-          return;
-        }
-      }
-
-      // Preparar datos
-      final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-      final cantidadTotal = cantidadCajaUnidad + unidades;
-      String itemId = (producto.itemId ?? '').trim();
-      String lote = (producto.lote ?? '').trim();
-
-      if (itemId.isEmpty || lote.isEmpty) {
-        _showErrorMessage('El producto no tiene códigos válidos para procesar');
-        return;
-      }
-
-      _showInfoMessage(
-          esResta ? 'Restando producto...' : 'Agregando producto...');
-
-      // 🎯 SOLO PRIMER PASO - NO FINALIZAR
-      final response = await _routeService.procesarEscaneoProductoValidacion(
-        idSesion: despacho.value!.id!,
-        itemId: itemId,
-        lote: lote,
-        cantidadCargada: cantidadTotal,
-        usuarioValidacion: userCode,
-        observaciones: esResta
-            ? 'Restado: $cajas cajas, $unidades unidades'
-            : 'Agregado: $cajas cajas, $unidades unidades',
-      );
-
-      if (response.isSuccess) {
-        _showSuccessMessage(esResta
-            ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
-            : 'Agregado exitosamente: $cajas cajas, $unidades unidades');
-        await loadDespachoDetalle();
-      } else {
-        String mensajeError = response.message.isNotEmpty
-            ? response.message
-            : 'Error al procesar producto';
-        _showErrorMessage(mensajeError);
-      }
-    } catch (e) {
-      print('❌ Error inesperado procesando producto: $e');
-      _showErrorMessage('Error inesperado: ${e.toString()}');
-    }
-  }
-
-// ✅ FUNCIÓN PARA FINALIZAR (con lógica condicional)
-  Future<void> finalizarProducto(SPProductoDetalle producto,
-      {int cajas = 0, int unidades = 0, bool esResta = false}) async {
-    try {
-      if (despacho.value?.id == null) {
-        _showErrorMessage('No se encontró ID de sesión válido');
-        return;
-      }
-
-      String itemId = (producto.itemId ?? '').trim();
-      String lote = (producto.lote ?? '').trim();
-
-      if (itemId.isEmpty || lote.isEmpty) {
-        _showErrorMessage('El producto no tiene códigos válidos para procesar');
-        return;
-      }
-
-      // 🎯 LÓGICA CONDICIONAL SEGÚN TU ESPECIFICACIÓN
-      final tieneCantidad = cajas > 0 || unidades > 0;
-
-      if (tieneCantidad) {
-        // ✅ CASO 1: HAY CANTIDAD - Ejecutar ambos pasos
-
-        // Validación para resta
-        if (esResta) {
-          final unidadesDisponibles = producto.unidadesValidadas ?? 0;
-          final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-          final cantidadTotalARestar = cantidadCajaUnidad + unidades;
-
-          if (unidadesDisponibles <= 0) {
-            _showWarningMessage('No hay unidades validadas para restar');
-            return;
-          }
-
-          if (cantidadTotalARestar > unidadesDisponibles) {
-            _showWarningMessage(
-                'No puede restar $cantidadTotalARestar unidades.\n'
-                'Solo hay $unidadesDisponibles unidades validadas.');
-            return;
-          }
-        }
-
-        final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-        final cantidadTotal = cantidadCajaUnidad + unidades;
-
-        _showInfoMessage(
-            esResta ? 'Restando producto...' : 'Procesando producto...');
-
-        // PASO 1: Procesar cantidad
-        final response = await _routeService.procesarEscaneoProductoValidacion(
-          idSesion: despacho.value!.id!,
-          itemId: itemId,
-          lote: lote,
-          cantidadCargada: cantidadTotal,
-          usuarioValidacion: userCode,
-          observaciones: esResta
-              ? 'Restado: $cajas cajas, $unidades unidades'
-              : 'Procesado: $cajas cajas, $unidades unidades',
-        );
-
-        if (response.isSuccess) {
-          _showSuccessMessage(esResta
-              ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
-              : 'Procesado exitosamente: $cajas cajas, $unidades unidades');
-
-          // PASO 2: Finalizar validación
-          _showInfoMessage('Finalizando validación...');
-
-          final finalizarResponse =
-              await _routeService.ProcesarProductoValidacionFinalizar(
-            idSesion: despacho.value!.id!,
-            itemId: itemId,
-            lote: lote,
-            usuarioValidacion: userCode,
-            observaciones: 'Validación finalizada después de procesar cantidad',
-          );
-
-          if (finalizarResponse.isSuccess) {
-            _showSuccessMessage('✅ Validación finalizada correctamente');
-          } else {
-            String mensajeError = finalizarResponse.message.isNotEmpty
-                ? finalizarResponse.message
-                : 'Error al finalizar validación';
-            _showWarningMessage('⚠️ Producto procesado pero: $mensajeError');
-          }
-
-          await loadDespachoDetalle();
-        } else {
-          String mensajeError = response.message.isNotEmpty
-              ? response.message
-              : 'Error al procesar producto';
-          _showErrorMessage(mensajeError);
-        }
-      } else {
-        // ✅ CASO 2: NO HAY CANTIDAD - Solo finalizar validación
-        _showInfoMessage('Finalizando validación del producto...');
-
-        final finalizarResponse =
-            await _routeService.ProcesarProductoValidacionFinalizar(
-          idSesion: despacho.value!.id!,
-          itemId: itemId,
-          lote: lote,
-          usuarioValidacion: userCode,
-          observaciones: 'Validación finalizada sin cantidad adicional',
-        );
-
-        if (finalizarResponse.isSuccess) {
-          _showSuccessMessage('✅ Producto validado correctamente');
-          await loadDespachoDetalle();
-        } else {
-          String mensajeError = finalizarResponse.message.isNotEmpty
-              ? finalizarResponse.message
-              : 'Error al finalizar validación';
-          _showErrorMessage(mensajeError);
-        }
-      }
-    } catch (e) {
-      print('❌ Error inesperado finalizando producto: $e');
-      _showErrorMessage('Error inesperado: ${e.toString()}');
-    }
   }
 
   /// Método para procesar producto
