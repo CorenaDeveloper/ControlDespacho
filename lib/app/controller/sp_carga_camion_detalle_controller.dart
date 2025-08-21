@@ -978,7 +978,6 @@ class SPCargaCamionDetalleController extends GetxController {
   }
 
 // SIMPLIFICADO - Solo modifica el método procesarProductoConTipo:
-
   Future<void> procesarProductoConTipo(SPProductoDetalle producto,
       {int cajas = 0, int unidades = 0, bool esResta = false}) async {
     try {
@@ -996,38 +995,33 @@ class SPCargaCamionDetalleController extends GetxController {
       // ✅ VALIDACIÓN SIMPLE PARA RESTA
       if (esResta) {
         final unidadesDisponibles = producto.unidadesValidadas ?? 0;
+        final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
+        final cantidadTotalARestar = cantidadCajaUnidad + unidades;
+
         if (unidadesDisponibles <= 0) {
           _showWarningMessage('No hay unidades validadas para restar');
           return;
         }
 
-        final cantidadTotal = (producto.factor ?? 0) * cajas + unidades;
-        if (cantidadTotal > unidadesDisponibles) {
-          _showWarningMessage('No puede restar $cantidadTotal unidades.\n'
-              'Solo hay $unidadesDisponibles unidades disponibles.');
+        if (cantidadTotalARestar > unidadesDisponibles) {
+          _showWarningMessage(
+              'No puede restar $cantidadTotalARestar unidades.\n'
+              'Solo hay $unidadesDisponibles unidades validadas.');
           return;
         }
       }
 
       // Mostrar indicador de carga
-      String accion = esResta ? 'Restando' : 'Agregando';
-      _showInfoMessage('$accion producto...');
+      _showInfoMessage(
+          esResta ? 'Restando producto...' : 'Procesando producto...');
 
       // Preparar datos para la API
       final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
-      var cantidadTotal = cantidadCajaUnidad + unidades;
-
-      // 🔥 CLAVE: Aplicar signo negativo si es resta
-      if (esResta) {
-        cantidadTotal = -cantidadTotal;
-      }
+      final cantidadTotal = cantidadCajaUnidad + unidades;
 
       String? itemId = (producto.itemId ?? '').trim();
       if (itemId.isEmpty) {
-        itemId = (producto.codigoSeguro).trim();
-        if (itemId.isEmpty) {
-          itemId = (producto.itemSeguro).trim();
-        }
+        itemId = (producto.itemId ?? '').trim();
       }
 
       if (itemId.isEmpty) {
@@ -1038,38 +1032,65 @@ class SPCargaCamionDetalleController extends GetxController {
 
       String? lote = (producto.lote ?? '').trim();
       if (lote.isEmpty) {
-        lote = (producto.loteSeguro).trim();
-        if (lote.isEmpty) {
-          lote = '0000';
-        }
+        lote = (producto.itemId ?? '').trim();
       }
 
-      if (userCode.isEmpty) {
-        _showErrorMessage('No se encontró código de usuario válido');
+      if (lote.isEmpty) {
+        _showErrorMessage(
+            'El producto no tiene un código válido para procesar');
         return;
       }
 
-      // Llamar a la API con cantidad positiva o negativa
+      // 🎯 PASO 1: Procesar/Agregar el producto
       final response = await _routeService.procesarEscaneoProductoValidacion(
         idSesion: despacho.value!.id!,
         itemId: itemId,
         lote: lote,
-        cantidadCargada: cantidadTotal, // ← Puede ser positivo o negativo
+        cantidadCargada: cantidadTotal,
         usuarioValidacion: userCode,
-        observaciones:
-            '${esResta ? "Restado" : "Agregado"}: $cajas cajas, $unidades unidades',
+        observaciones: esResta
+            ? 'Restado: $cajas cajas, $unidades unidades'
+            : 'Procesado: $cajas cajas, $unidades unidades',
       );
 
       if (response.isSuccess) {
-        // ✅ ÉXITO
-        String mensaje = esResta
+        // ✅ PASO 1 EXITOSO - Mostrar mensaje de éxito inicial
+        _showSuccessMessage(esResta
             ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
-            : 'Agregado exitosamente: $cajas cajas, $unidades unidades';
-        _showSuccessMessage(mensaje);
+            : 'Procesado exitosamente: $cajas cajas, $unidades unidades');
 
-        await loadDespachoDetalle();
+        // 🎯 PASO 2: Finalizar la validación automáticamente
+        _showInfoMessage('Finalizando validación...');
+
+        final finalizarResponse =
+            await _routeService.ProcesarProductoValidacionFinalizar(
+          idSesion: despacho.value!.id!,
+          itemId: itemId,
+          lote: lote,
+          usuarioValidacion: userCode,
+          observaciones: esResta
+              ? 'Validación finalizada después de restar: $cajas cajas, $unidades unidades'
+              : 'Validación finalizada después de procesar: $cajas cajas, $unidades unidades',
+        );
+
+        if (finalizarResponse.isSuccess) {
+          // ✅ PASO 2 EXITOSO - Mostrar mensaje de validación completa
+          _showSuccessMessage('✅ Validación finalizada correctamente');
+
+          // Recargar datos para reflejar cambios
+          await loadDespachoDetalle();
+        } else {
+          // ❌ PASO 2 FALLÓ - Mostrar advertencia pero el producto ya fue procesado
+          String mensajeError = finalizarResponse.message.isNotEmpty
+              ? finalizarResponse.message
+              : 'Error al finalizar validación';
+          _showWarningMessage('⚠️ Producto procesado pero: $mensajeError');
+
+          // Aún así recargar datos para mostrar el estado actual
+          await loadDespachoDetalle();
+        }
       } else {
-        // ❌ ERROR
+        // ❌ PASO 1 FALLÓ - La API nos dice qué está mal
         String mensajeError = response.message.isNotEmpty
             ? response.message
             : 'Error al procesar producto';
@@ -1321,21 +1342,12 @@ class SPCargaCamionDetalleController extends GetxController {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            esResta
-                                ? 'Cargado disponible: ${producto.unidadesValidadas ?? 0} unidades'
-                                : 'Agregando al camión',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: spColorGrey600,
-                            ),
-                          ),
+                          // ❌ REMOVIDO: Botón mal ubicado aquí
                           if (esResta &&
                               (producto.unidadesValidadas ?? 0) <= 0) ...[
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             Text(
-                              '❌ No hay productocargado disponible para restar',
+                              '❌ No hay producto cargado disponible para restar',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: spColorError500,
@@ -1420,76 +1432,69 @@ class SPCargaCamionDetalleController extends GetxController {
                       ),
 
                     // Información de totales y pendientes (más compacta)
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: (producto.unidadesValidadas ?? 0) > 0
+                            ? spColorSuccess500.withOpacity(0.15)
+                            : spColorGrey400.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: (producto.unidadesValidadas ?? 0) > 0
+                                ? spColorSuccess500.withOpacity(0.4)
+                                : spColorGrey400.withOpacity(0.4),
+                            width: 2),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.inventory,
+                                size: 14,
+                                color: (producto.unidadesValidadas ?? 0) > 0
+                                    ? spColorSuccess500
+                                    : spColorGrey400,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                'CARGADO ACTUAL',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: (producto.totalProcesadas) > 0
+                                      ? spColorSuccess500
+                                      : spColorGrey400,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${producto.totalProcesadas}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
                               color: (producto.unidadesValidadas ?? 0) > 0
-                                  ? spColorSuccess500.withOpacity(0.15)
-                                  : spColorGrey400.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: (producto.unidadesValidadas ?? 0) > 0
-                                      ? spColorSuccess500.withOpacity(0.4)
-                                      : spColorGrey400.withOpacity(0.4),
-                                  width: 2),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.inventory,
-                                      size: 14,
-                                      color:
-                                          (producto.unidadesValidadas ?? 0) > 0
-                                              ? spColorSuccess500
-                                              : spColorGrey400,
-                                    ),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      'CARGADO ACTUAL',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: (producto.totalProcesadas) > 0
-                                            ? spColorSuccess500
-                                            : spColorGrey400,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${producto.totalProcesadas}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    color: (producto.unidadesValidadas ?? 0) > 0
-                                        ? spColorSuccess500
-                                        : spColorGrey400,
-                                  ),
-                                ),
-                                Text(
-                                  'C.0U',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: (producto.unidadesValidadas ?? 0) > 0
-                                        ? spColorSuccess500
-                                        : spColorGrey400,
-                                  ),
-                                ),
-                              ],
+                                  ? spColorSuccess500
+                                  : spColorGrey400,
                             ),
                           ),
-                        ),
-                      ],
+                          Text(
+                            'Unidades',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: (producto.unidadesValidadas ?? 0) > 0
+                                  ? spColorSuccess500
+                                  : spColorGrey400,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     const SizedBox(height: 12),
@@ -1615,7 +1620,47 @@ class SPCargaCamionDetalleController extends GetxController {
 
                     const SizedBox(height: 16),
 
-                    // Botones de acción
+                    // ✅ BOTÓN FINALIZAR CENTRADO
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: ElevatedButton(
+                        onPressed: procesarYCerrarModal,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              esResta ? spColorError500 : spColorPrimary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              esResta
+                                  ? Icons.remove_circle_outline
+                                  : Icons.add_circle_outline,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Finalizar Carga de Producto',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Botones de acción secundarios
                     Row(
                       children: [
                         // Botón Cancelar
@@ -1647,16 +1692,16 @@ class SPCargaCamionDetalleController extends GetxController {
 
                         const SizedBox(width: 8),
 
-                        // Botón Procesar con colores específicos
+                        // Botón Atajo (ENT)
                         Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
+                          child: OutlinedButton(
                             onPressed: procesarYCerrarModal,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  esResta ? spColorError500 : spColorPrimary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              side: BorderSide(
+                                color:
+                                    esResta ? spColorError500 : spColorPrimary,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -1666,6 +1711,8 @@ class SPCargaCamionDetalleController extends GetxController {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
+                                color:
+                                    esResta ? spColorError500 : spColorPrimary,
                               ),
                             ),
                           ),
@@ -1680,6 +1727,205 @@ class SPCargaCamionDetalleController extends GetxController {
         ),
       ),
     );
+  }
+
+// ✅ FUNCIÓN PARA AGREGAR/RESTAR (solo primer paso)
+  Future<void> procesarProductoSinFinalizar(SPProductoDetalle producto,
+      {int cajas = 0, int unidades = 0, bool esResta = false}) async {
+    try {
+      if (despacho.value?.id == null) {
+        _showErrorMessage('No se encontró ID de sesión válido');
+        return;
+      }
+
+      // ✅ VALIDACIÓN OBLIGATORIA PARA AGREGAR/RESTAR
+      if (cajas <= 0 && unidades <= 0) {
+        _showWarningMessage('Debe ingresar al menos una caja o unidad');
+        return;
+      }
+
+      // ✅ VALIDACIÓN PARA RESTA
+      if (esResta) {
+        final unidadesDisponibles = producto.unidadesValidadas ?? 0;
+        final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
+        final cantidadTotalARestar = cantidadCajaUnidad + unidades;
+
+        if (unidadesDisponibles <= 0) {
+          _showWarningMessage('No hay unidades validadas para restar');
+          return;
+        }
+
+        if (cantidadTotalARestar > unidadesDisponibles) {
+          _showWarningMessage(
+              'No puede restar $cantidadTotalARestar unidades.\n'
+              'Solo hay $unidadesDisponibles unidades validadas.');
+          return;
+        }
+      }
+
+      // Preparar datos
+      final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
+      final cantidadTotal = cantidadCajaUnidad + unidades;
+      String itemId = (producto.itemId ?? '').trim();
+      String lote = (producto.lote ?? '').trim();
+
+      if (itemId.isEmpty || lote.isEmpty) {
+        _showErrorMessage('El producto no tiene códigos válidos para procesar');
+        return;
+      }
+
+      _showInfoMessage(
+          esResta ? 'Restando producto...' : 'Agregando producto...');
+
+      // 🎯 SOLO PRIMER PASO - NO FINALIZAR
+      final response = await _routeService.procesarEscaneoProductoValidacion(
+        idSesion: despacho.value!.id!,
+        itemId: itemId,
+        lote: lote,
+        cantidadCargada: cantidadTotal,
+        usuarioValidacion: userCode,
+        observaciones: esResta
+            ? 'Restado: $cajas cajas, $unidades unidades'
+            : 'Agregado: $cajas cajas, $unidades unidades',
+      );
+
+      if (response.isSuccess) {
+        _showSuccessMessage(esResta
+            ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
+            : 'Agregado exitosamente: $cajas cajas, $unidades unidades');
+        await loadDespachoDetalle();
+      } else {
+        String mensajeError = response.message.isNotEmpty
+            ? response.message
+            : 'Error al procesar producto';
+        _showErrorMessage(mensajeError);
+      }
+    } catch (e) {
+      print('❌ Error inesperado procesando producto: $e');
+      _showErrorMessage('Error inesperado: ${e.toString()}');
+    }
+  }
+
+// ✅ FUNCIÓN PARA FINALIZAR (con lógica condicional)
+  Future<void> finalizarProducto(SPProductoDetalle producto,
+      {int cajas = 0, int unidades = 0, bool esResta = false}) async {
+    try {
+      if (despacho.value?.id == null) {
+        _showErrorMessage('No se encontró ID de sesión válido');
+        return;
+      }
+
+      String itemId = (producto.itemId ?? '').trim();
+      String lote = (producto.lote ?? '').trim();
+
+      if (itemId.isEmpty || lote.isEmpty) {
+        _showErrorMessage('El producto no tiene códigos válidos para procesar');
+        return;
+      }
+
+      // 🎯 LÓGICA CONDICIONAL SEGÚN TU ESPECIFICACIÓN
+      final tieneCantidad = cajas > 0 || unidades > 0;
+
+      if (tieneCantidad) {
+        // ✅ CASO 1: HAY CANTIDAD - Ejecutar ambos pasos
+
+        // Validación para resta
+        if (esResta) {
+          final unidadesDisponibles = producto.unidadesValidadas ?? 0;
+          final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
+          final cantidadTotalARestar = cantidadCajaUnidad + unidades;
+
+          if (unidadesDisponibles <= 0) {
+            _showWarningMessage('No hay unidades validadas para restar');
+            return;
+          }
+
+          if (cantidadTotalARestar > unidadesDisponibles) {
+            _showWarningMessage(
+                'No puede restar $cantidadTotalARestar unidades.\n'
+                'Solo hay $unidadesDisponibles unidades validadas.');
+            return;
+          }
+        }
+
+        final cantidadCajaUnidad = (producto.factor ?? 0) * cajas;
+        final cantidadTotal = cantidadCajaUnidad + unidades;
+
+        _showInfoMessage(
+            esResta ? 'Restando producto...' : 'Procesando producto...');
+
+        // PASO 1: Procesar cantidad
+        final response = await _routeService.procesarEscaneoProductoValidacion(
+          idSesion: despacho.value!.id!,
+          itemId: itemId,
+          lote: lote,
+          cantidadCargada: cantidadTotal,
+          usuarioValidacion: userCode,
+          observaciones: esResta
+              ? 'Restado: $cajas cajas, $unidades unidades'
+              : 'Procesado: $cajas cajas, $unidades unidades',
+        );
+
+        if (response.isSuccess) {
+          _showSuccessMessage(esResta
+              ? 'Restado exitosamente: $cajas cajas, $unidades unidades'
+              : 'Procesado exitosamente: $cajas cajas, $unidades unidades');
+
+          // PASO 2: Finalizar validación
+          _showInfoMessage('Finalizando validación...');
+
+          final finalizarResponse =
+              await _routeService.ProcesarProductoValidacionFinalizar(
+            idSesion: despacho.value!.id!,
+            itemId: itemId,
+            lote: lote,
+            usuarioValidacion: userCode,
+            observaciones: 'Validación finalizada después de procesar cantidad',
+          );
+
+          if (finalizarResponse.isSuccess) {
+            _showSuccessMessage('✅ Validación finalizada correctamente');
+          } else {
+            String mensajeError = finalizarResponse.message.isNotEmpty
+                ? finalizarResponse.message
+                : 'Error al finalizar validación';
+            _showWarningMessage('⚠️ Producto procesado pero: $mensajeError');
+          }
+
+          await loadDespachoDetalle();
+        } else {
+          String mensajeError = response.message.isNotEmpty
+              ? response.message
+              : 'Error al procesar producto';
+          _showErrorMessage(mensajeError);
+        }
+      } else {
+        // ✅ CASO 2: NO HAY CANTIDAD - Solo finalizar validación
+        _showInfoMessage('Finalizando validación del producto...');
+
+        final finalizarResponse =
+            await _routeService.ProcesarProductoValidacionFinalizar(
+          idSesion: despacho.value!.id!,
+          itemId: itemId,
+          lote: lote,
+          usuarioValidacion: userCode,
+          observaciones: 'Validación finalizada sin cantidad adicional',
+        );
+
+        if (finalizarResponse.isSuccess) {
+          _showSuccessMessage('✅ Producto validado correctamente');
+          await loadDespachoDetalle();
+        } else {
+          String mensajeError = finalizarResponse.message.isNotEmpty
+              ? finalizarResponse.message
+              : 'Error al finalizar validación';
+          _showErrorMessage(mensajeError);
+        }
+      }
+    } catch (e) {
+      print('❌ Error inesperado finalizando producto: $e');
+      _showErrorMessage('Error inesperado: ${e.toString()}');
+    }
   }
 
   /// Método para procesar producto

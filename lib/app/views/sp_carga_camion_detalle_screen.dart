@@ -724,7 +724,7 @@ class SPDespachoDetalleScreenState extends State<SPCargaCamionDetalleScreen> {
                   controller.openProcessModal(context, producto);
                   // El focus se manejará automáticamente por el observer
                 }
-              : null, // 🆕 Deshabilitar tap si está completado
+              : null, //Deshabilitar tap si está completado
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
